@@ -1,6 +1,5 @@
 import { getStore } from '@netlify/blobs';
 import { AssessmentSubmission, AdminStats } from '../src/types.js';
-import { SEEDED_ASSESSMENTS } from '../src/data/seededAssessments.js';
 
 const STORE_NAME = 'assessments';
 
@@ -9,10 +8,6 @@ export async function getAllAssessments(): Promise<AssessmentSubmission[]> {
   const { blobs } = await store.list();
 
   const items: AssessmentSubmission[] = [];
-
-  // Always include seeded demo data
-  const seeded = SEEDED_ASSESSMENTS as AssessmentSubmission[];
-  items.push(...seeded);
 
   for (const blob of blobs) {
     try {
