@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import dotenv from 'dotenv';
 import { store } from './src/db/store.js';
 import { researchBrandWebsite } from './src/lib/research.js';
-import { analyzeBrandWithGemini } from './src/lib/gemini.js';
+import { analyzeBrandWithGemini } from './src/lib/gemini.js'
 import { sendAssessmentEmail } from './src/lib/email.js';
 import { AssessmentSubmission } from './src/types.js';
 
