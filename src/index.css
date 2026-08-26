@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #000000;
+    color: #E4E4E7;
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+.mono {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-feature-settings: "tnum";
+}
+
+.radar-grid {
+  background-image: radial-gradient(#27272A 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.status-pill {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.05em;
+}
+
+.status-pill.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.status-pill.warning {
+  background-color: #27272A;
+  color: #D4D4D8;
+  border: 1px solid #3F3F46;
+}
+
+.status-pill.info {
+  background-color: #18181B;
+  color: #A1A1AA;
+  border: 1px solid #27272A;
+}
+
+.status-pill.gold {
+  background-color: #FFFFFF;
+  color: #000000;
+  border: 1px solid #FFFFFF;
+}
+
+.cell-border {
+  border: 1px solid #27272A;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525B;
+}
+
+/* Print & A4 Export Styles */
+@page {
+  size: A4 portrait;
+  margin: 10mm 8mm;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html, body {
+    background-color: #09090B !important;
+    color: #E4E4E7 !important;
+    width: 210mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  }
+
+  header, footer, button, .no-print, .sticky {
+    display: none !important;
+  }
+
+  #report-print-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .print-module {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 20px !important;
+    border-radius: 12px !important;
+    box-shadow: none !important;
+  }
+
+  .print-page-break {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+}
+
+

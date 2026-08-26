@@ -1,0 +1,6 @@
+{
+  "name": "The RAGE Oracle™ | The RAGE Media Group",
+  "description": "AI-Powered Brand Clarity & Next-Best-Move Strategic Assessment Engine",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>The RAGE Oracle™ | Strategic Intelligence Engine</title>
+    <script>
+      (function() {
+        try {
+          if (typeof window !== 'undefined') {
+            var origFetch = window.fetch;
+            var currentFetch = origFetch;
+            Object.defineProperty(window, 'fetch', {
+              configurable: true,
+              enumerable: true,
+              get: function() {
+                return currentFetch;
+              },
+              set: function(fn) {
+                currentFetch = fn;
+              }
+            });
+          }
+        } catch (e) {
+          // fetch safeguard active
+        }
+      })();
+    </script>
+    <meta name="description" content="AI-Powered Brand Clarity & Next-Best-Move Strategic Assessment Engine by The RAGE Media Group" />
+    <meta property="og:title" content="The RAGE Oracle™ | The RAGE Media Group" />
+    <meta property="og:description" content="AI-Powered Brand Clarity & Next-Best-Move Strategic Assessment Engine by The RAGE Media Group" />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
