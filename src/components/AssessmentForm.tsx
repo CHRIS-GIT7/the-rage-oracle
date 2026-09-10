@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { AGENCY_CONFIG } from '../data/agencyConfig';
-import { 
-  BusinessInfo, 
-  BrandInfo, 
-  CustomerMarketInfo, 
-  MarketingInfo, 
-  StrategicQuestions, 
+import {
+  BusinessInfo,
+  BrandInfo,
+  CustomerMarketInfo,
+  MarketingInfo,
+  StrategicQuestions,
   ContactInfo,
   AssessmentSubmission
 } from '../types';
-import { 
-  Building2, 
-  Target, 
-  Users, 
-  TrendingUp, 
-  HelpCircle, 
-  Mail, 
-  ChevronRight, 
-  ChevronLeft, 
-  Check, 
+import {
+  Building2,
+  Target,
+  Users,
+  TrendingUp,
+  HelpCircle,
+  Mail,
+  ChevronRight,
+  ChevronLeft,
+  Check,
   AlertCircle,
   Save,
   Sparkles
@@ -199,60 +199,60 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
     });
   };
 
-  const handleLoadWardrobeRefreshSample = () => {
+  const handleLoadRageMediaGroupSample = () => {
     setBusiness({
-      brandName: 'The Wardrobe Refresh',
-      website: 'https://www.instagram.com/thewardrobe_refresh/',
-      industry: 'Fashion, Personal Styling & Curated Thrift',
-      market: 'Lagos & Urban Nigeria (Abuja, Port Harcourt)',
-      productDescription: 'Curated wardrobe refresh packages, personal styling, premium thrift & vintage clothing drops, wardrobe decluttering, and capsule closet curation for stylish Nigerian women and executives.',
-      yearsOperating: '1–3 years',
-      businessSize: '2–10',
+      brandName: 'The RAGE Media Group',
+      website: 'https://theragemediagroup.com/',
+      industry: 'Digital Marketing, Branding, PR & Web Design',
+      market: 'Nigeria, Pan-African & Global Markets',
+      productDescription: 'Comprehensive digital marketing, brand identity design, strategic PR, outdoor billboard advertising, web & mobile app development, social media management, and commercial printing services.',
+      yearsOperating: '8–15 years',
+      businessSize: '201–500',
       primaryObjective: 'Acquire more customers',
-      twelveMonthGoal: 'Scale monthly revenue to ₦15M+ by building a predictable WhatsApp DM funnel and launching curated capsule subscription drops.',
+      twelveMonthGoal: 'Scale enterprise client retainers and expand multi-channel branding, PR, and web development campaigns across African and international markets.',
     });
 
     setBrand({
-      brandKnownFor: 'Effortless, chic wardrobe revamps, premium thrift finds, and body-flattering personal styling for Nigerian women.',
-      primaryCustomer: 'Working female professionals, corporate executives, and fashion-conscious Nigerian women (ages 23–42) in Lagos and Abuja.',
-      whyChooseUs: 'Curated high-quality pieces, personalized styling advice, affordable luxury feel, and hassle-free door delivery.',
-      keyDifferentiator: 'Handpicked premium condition guarantee paired with 1-on-1 virtual styling and closet decluttering consultations.',
-      topCompetitors: 'Thrift Lagos Boutiques, Shop Thrifty NG, Local IG Vintage Vendors, Fast Fashion Retailers (Zara, Shein)',
-      perceivedBrandImage: 'Stylish Instagram fashion page, but occasionally perceived as an informal IG vendor rather than a high-ticket personal styling brand.',
-      biggestConcern: 'DM-dependent sales where leads ask for prices but disappear, price haggling on Instagram DMs, and high drop-off from post views to completed WhatsApp payments.',
+      brandKnownFor: 'Comprehensive 360° digital marketing, iconic brand identity design, strategic PR, high-impact outdoor billboards, and web development.',
+      primaryCustomer: 'Founders, CEOs, CMOs, corporate enterprises, and ambitious SMEs seeking market dominance across Nigeria and globally.',
+      whyChooseUs: 'Full-service marketing ecosystem combining creative branding, strategic PR, high-visibility advertising, and custom web/app solutions under one roof.',
+      keyDifferentiator: 'Complete 360-degree media integration—from digital campaigns and PR to physical billboards, printing, and custom software development.',
+      topCompetitors: 'Traditional Ad Agencies, PR Consultancies, Digital Marketing & Web Development Agencies',
+      perceivedBrandImage: 'Leading full-service digital marketing agency in Nigeria known for bold branding, PR execution, and high-impact multi-channel campaigns.',
+      biggestConcern: 'Streamlining campaign performance tracking across traditional outdoor media and digital web/social channels.',
     });
 
     setCustomer({
-      customerProblem: 'Nigerian women want to look stylish and well-dressed without spending hundreds of thousands on overpriced fast fashion or wearing low-quality clothes.',
-      searchTrigger: 'Starting a new job, wardrobe fatigue, attending major events (weddings, dinners), or seasonal wardrobe decluttering.',
-      hesitationReasons: 'Skepticism over clothing size fit, fear of receiving worn-out items, delivery delays, and preference for instant WhatsApp customer care.',
-      topValueDrivers: ['Quality', 'Results', 'Trust', 'Convenience', 'Speed'],
-      geographicMarkets: 'Lagos (Mainland & Island), Abuja, Port Harcourt, Ibadan',
+      customerProblem: 'Businesses struggle to build strong brand presence, generate consistent qualified leads, and execute integrated campaigns across digital and traditional channels.',
+      searchTrigger: 'Launching a new brand or product line, business expansion, needing professional PR/billboards, or struggling with web conversion and social media engagement.',
+      hesitationReasons: 'Budget allocation between digital vs. traditional channels (billboards/TV), campaign ROI proof, and vendor consolidation.',
+      topValueDrivers: ['Trust', 'Results', 'Quality', 'Reputation', 'Customer service'],
+      geographicMarkets: 'Nigeria, West Africa, Pan-African & International Markets',
       planningExpansion: 'Yes',
-      expansionTarget: 'Pan-Nigerian shipping network and nationwide Virtual Wardrobe Consultation subscriptions.',
+      expansionTarget: 'Pan-African and International Corporate Markets.',
     });
 
     setMarketing({
-      activeChannels: ['Instagram', 'TikTok', 'WhatsApp', 'Word of Mouth'],
-      bestPerformingActivity: 'Instagram Reels showcasing Before-and-After wardrobe transformations and new thrift item drop videos.',
-      failedActivity: 'Generic Instagram boost ads without video try-on proof or direct WhatsApp conversion links.',
+      activeChannels: ['LinkedIn', 'Google Search', 'Instagram', 'TikTok', 'Facebook', 'Youtube', 'X', 'Meta Ads', 'Email', 'PR'],
+      bestPerformingActivity: 'Integrated social media management, targeted Google Search campaigns, and strategic PR releases.',
+      failedActivity: 'Generic un-targeted ad campaigns without clear multi-channel follow-up.',
       runningPaidAds: 'Yes',
-      monthlyBudget: '₦250,000–₦500,000',
+      monthlyBudget: '₦5m–₦10m',
     });
 
     setStrategy({
-      oneThingToFix: 'Convert casual Instagram DM inquiries into instant paid WhatsApp orders with zero price haggling.',
-      growthBlocker: 'Lack of an automated WhatsApp product catalog and structured video social proof showing real Nigerian clients in transformed outfits.',
-      biggestQuestion: 'How can we position Wardrobe Refresh as a high-ticket personal styling brand rather than just another IG thrift vendor?',
-      reportValueFactor: 'Step-by-step funnel strategy to double WhatsApp order conversions and build an exclusive VIP styling membership.',
-      additionalContext: 'Instagram handle @thewardrobe_refresh. Active on IG stories and reels, relies heavily on bank transfers and Paystack links for payment.',
+      oneThingToFix: 'Streamline multi-channel lead tracking and convert website traffic into high-value campaign inquiries.',
+      growthBlocker: 'Expanding agency service delivery capacity to keep up with high demand for integrated PR, billboard, and web development campaigns.',
+      biggestQuestion: 'How can we maximize campaign ROI and position Rage Media Group as the top 360° marketing and branding partner across Africa?',
+      reportValueFactor: 'A clear growth roadmap, multi-channel positioning breakdown, and actionable campaign strategy.',
+      additionalContext: 'Primary website https://theragemediagroup.com/. Leading digital marketing agency in Nigeria providing branding, PR, advertising, billboards, social media, and web design.',
     });
 
     setContact({
-      fullName: 'Founder / Lead Stylist',
-      jobTitle: 'Founder & Creative Director',
-      email: 'contact@thewardrobe_refresh.com',
-      companyName: 'The Wardrobe Refresh',
+      fullName: 'Rage Media Group Team',
+      jobTitle: 'Client Growth Director',
+      email: 'contact@theragemediagroup.com',
+      companyName: 'The RAGE Media Group',
       phone: '+234 800 000 0000',
       allowFollowUp: true,
     });
@@ -318,7 +318,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
 
           {/* Progress Bar */}
           <div className="w-full bg-[#18181B] h-1.5 rounded-full overflow-hidden border border-[#27272A]">
-            <div 
+            <div
               className="bg-white h-full transition-all duration-300"
               style={{ width: `${(currentStep / 6) * 100}%` }}
             />
@@ -332,16 +332,14 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
               const isDone = s.num < currentStep;
 
               return (
-                <div 
+                <div
                   key={s.num}
                   onClick={() => { if (s.num < currentStep) setCurrentStep(s.num); }}
-                  className={`flex flex-col items-center gap-1 cursor-pointer transition-opacity ${
-                    isActive ? 'opacity-100' : isDone ? 'opacity-80' : 'opacity-40'
-                  }`}
+                  className={`flex flex-col items-center gap-1 cursor-pointer transition-opacity ${isActive ? 'opacity-100' : isDone ? 'opacity-80' : 'opacity-40'
+                    }`}
                 >
-                  <div className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-all ${
-                    isActive ? 'bg-white text-black ring-2 ring-white/30' : isDone ? 'bg-[#18181B] text-white border border-[#27272A]' : 'bg-[#09090B] text-neutral-600 border border-[#27272A]'
-                  }`}>
+                  <div className={`w-7 h-7 rounded flex items-center justify-center text-xs font-bold transition-all ${isActive ? 'bg-white text-black ring-2 ring-white/30' : isDone ? 'bg-[#18181B] text-white border border-[#27272A]' : 'bg-[#09090B] text-neutral-600 border border-[#27272A]'
+                    }`}>
                     {isDone ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
                   </div>
                   <span className="hidden sm:inline text-[9px] font-semibold text-neutral-400 uppercase truncate">
@@ -361,15 +359,15 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
               <span>TEST RUN SAMPLE PRESET</span>
             </div>
             <p className="text-xs text-neutral-400 mt-0.5 font-medium">
-              Want to run a real-time test? Load analyzed data for <strong className="text-white font-bold">The Wardrobe Refresh (@thewardrobe_refresh)</strong>.
+              Want to run a real-time test? Load analyzed data for <strong className="text-white font-bold">The RAGE Media Group (theragemediagroup.com)</strong>.
             </p>
           </div>
           <button
             type="button"
-            onClick={handleLoadWardrobeRefreshSample}
+            onClick={handleLoadRageMediaGroupSample}
             className="px-4 py-2 bg-white text-black text-xs font-extrabold uppercase rounded-lg hover:bg-neutral-200 transition-all shrink-0 shadow-md border border-white"
           >
-            Load @thewardrobe_refresh
+            Load theragemediagroup.com
           </button>
         </div>
 
@@ -677,11 +675,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                         key={driver}
                         type="button"
                         onClick={() => toggleValueDriver(driver)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                          isSelected
-                            ? 'bg-white text-black border-white'
-                            : 'bg-[#18181B] text-neutral-300 border-[#27272A] hover:border-neutral-500'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${isSelected
+                          ? 'bg-white text-black border-white'
+                          : 'bg-[#18181B] text-neutral-300 border-[#27272A] hover:border-neutral-500'
+                          }`}
                       >
                         {driver}
                       </button>
@@ -752,11 +749,10 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                         key={channel}
                         type="button"
                         onClick={() => toggleChannel(channel)}
-                        className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                          isSelected
-                            ? 'bg-white text-black border-white'
-                            : 'bg-[#18181B] text-neutral-300 border-[#27272A] hover:border-neutral-500'
-                        }`}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold border transition-all ${isSelected
+                          ? 'bg-white text-black border-white'
+                          : 'bg-[#18181B] text-neutral-300 border-[#27272A] hover:border-neutral-500'
+                          }`}
                       >
                         {channel}
                       </button>

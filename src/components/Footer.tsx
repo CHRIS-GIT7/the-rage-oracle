@@ -53,10 +53,6 @@ export const Footer: React.FC = () => {
           <p className="text-neutral-400 text-xs leading-relaxed mb-3 font-normal">
             100% Free Confidential Assessment. No credit card required. Data is processed strictly for report synthesis.
           </p>
-          <div className="flex items-center gap-2 text-neutral-300 text-xs font-medium">
-            <Sparkles className="w-3.5 h-3.5 text-white" />
-            <span>Powered by Gemini 3.6 Strategic AI</span>
-          </div>
         </div>
       </div>
 
