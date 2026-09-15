@@ -19,6 +19,8 @@ import {
   Target
 } from 'lucide-react';
 
+import { ReportSkeletonLoader } from './ReportSkeletonLoader';
+
 interface ReportViewProps {
   submission: AssessmentSubmission;
   onBackToMain?: () => void;
@@ -32,15 +34,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
   const analysis = submission.analysis;
 
   if (!analysis) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center text-white bg-[#0A0B0E]">
-        <div className="text-center p-8 bg-[#121215] rounded-2xl border border-[#27272A]">
-          <AlertTriangle className="w-8 h-8 text-white mx-auto mb-3" />
-          <h3 className="font-sans font-extrabold text-lg uppercase tracking-tight">Report Generation in Progress</h3>
-          <p className="text-xs text-neutral-400 mt-2">Please wait while the Oracle finishes compiling your report...</p>
-        </div>
-      </div>
-    );
+    return <ReportSkeletonLoader brandName={submission?.business?.brandName} />;
   }
 
   const handleDownloadPDF = async () => {
@@ -345,38 +339,108 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           </div>
         </div>
 
-        {/* MODULE 4: STRATEGIC BET & MEASUREMENT */}
+        {/* MODULE 4: STRATEGIC BET & KEY NUMBERS */}
         <div className="print-module bg-[#121215] border border-[#27272A] rounded-2xl p-8 sm:p-10 space-y-6 shadow-xl">
           <div className="flex items-center justify-between border-b border-[#27272A] pb-4">
             <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">MODULE 04 • YOUR GROWTH BET & KEY NUMBERS</span>
-            <span className="text-xs text-neutral-400 font-semibold uppercase">HOW TO KNOW IT'S WORKING</span>
+            <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">HOW TO KNOW IT'S WORKING</span>
           </div>
 
           <div className="p-5 rounded-xl bg-[#09090B] border border-[#27272A] space-y-2">
             <span className="text-[10px] font-extrabold text-neutral-400 uppercase tracking-widest block">OUR STRATEGIC PREDICTION</span>
             <p className="text-xs font-medium italic text-neutral-200 leading-relaxed">
-              "We believe <strong className="text-white font-extrabold">{analysis.strategicBet.action}</strong> will drive <strong className="text-white font-extrabold">{analysis.strategicBet.desiredOutcome}</strong> among <strong className="text-white font-extrabold">{analysis.strategicBet.audience}</strong> because <span className="text-neutral-300">{analysis.strategicBet.becauseEvidence}</span>."
+              "We believe <strong className="text-white font-extrabold">{analysis.strategicBet.action}</strong> will drive <strong className="text-white font-extrabold">{analysis.strategicBet.desiredOutcome}</strong> among <strong className="text-white font-extrabold">{analysis.strategicBet.audience}</strong> because <span className="text-neutral-300">{(analysis.strategicBet.becauseEvidence || '').replace(/\.+$/, '')}</span>."
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center text-xs">
-            <div className="bg-[#18181B] p-3 rounded-lg border border-[#27272A]">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold block">Confidence</span>
-              <p className="font-extrabold text-white text-sm mt-0.5">{analysis.strategicBet.confidence}%</p>
+          {/* 4 Metric Cards without truncation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">CONFIDENCE</span>
+              <p className="font-extrabold text-white text-xl">{analysis.strategicBet.confidence}%</p>
             </div>
-            <div className="bg-[#18181B] p-3 rounded-lg border border-[#27272A]">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold block">Expected Impact</span>
-              <p className="font-extrabold text-white text-xs mt-0.5 truncate">{analysis.strategicBet.expectedImpact}</p>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">EXPECTED IMPACT</span>
+              <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.expectedImpact}</p>
             </div>
-            <div className="bg-[#18181B] p-3 rounded-lg border border-[#27272A]">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold block">Risk Level</span>
-              <p className="font-extrabold text-white text-sm mt-0.5">{analysis.strategicBet.risk}</p>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">RISK LEVEL</span>
+              <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.risk}</p>
             </div>
-            <div className="bg-[#18181B] p-3 rounded-lg border border-[#27272A]">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold block">How To Test It</span>
-              <p className="font-extrabold text-white text-[11px] mt-0.5 truncate">{analysis.strategicBet.validationMethod}</p>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">HOW TO TEST IT</span>
+              <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.validationMethod}</p>
             </div>
           </div>
+
+          {/* Measurement Framework Metrics */}
+          {analysis.measurementFramework && (
+            <div className="pt-4 border-t border-[#27272A] space-y-4">
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">KEY PERFORMANCE INDICATOR (KPI) DASHBOARD</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                {analysis.measurementFramework.businessKpis?.length > 0 && (
+                  <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Business & Revenue KPIs</span>
+                    <ul className="space-y-1 text-neutral-300 text-xs font-medium">
+                      {analysis.measurementFramework.businessKpis.map((kpi, i) => (
+                        <li key={i}>• {kpi}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {analysis.measurementFramework.marketingKpis?.length > 0 && (
+                  <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Marketing & Acquisition KPIs</span>
+                    <ul className="space-y-1 text-neutral-300 text-xs font-medium">
+                      {analysis.measurementFramework.marketingKpis.map((kpi, i) => (
+                        <li key={i}>• {kpi}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {analysis.measurementFramework.brandKpis?.length > 0 && (
+                  <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Brand Perception KPIs</span>
+                    <ul className="space-y-1 text-neutral-300 text-xs font-medium">
+                      {analysis.measurementFramework.brandKpis.map((kpi, i) => (
+                        <li key={i}>• {kpi}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {analysis.measurementFramework.leadingIndicators?.length > 0 && (
+                  <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Leading Activity Signals</span>
+                    <ul className="space-y-1 text-neutral-300 text-xs font-medium">
+                      {analysis.measurementFramework.leadingIndicators.map((kpi, i) => (
+                        <li key={i}>• {kpi}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Strategic Unknowns */}
+          {analysis.unknowns && analysis.unknowns.length > 0 && (
+            <div className="pt-4 border-t border-[#27272A] space-y-3">
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">KEY STRATEGIC UNKNOWNS TO VALIDATE</span>
+              <div className="space-y-2">
+                {analysis.unknowns.map((un, idx) => (
+                  <div key={idx} className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="space-y-0.5">
+                      <p className="font-bold text-white text-xs">{un.question}</p>
+                      <p className="text-neutral-400 text-[11px]">{un.whyItMatters}</p>
+                    </div>
+                    <span className="shrink-0 px-2.5 py-1 rounded bg-[#27272A] text-neutral-200 text-[10px] font-mono">
+                      TEST: {un.validationNeeded}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* MODULE 5: WORK WITH THE RAGE MEDIA GROUP (PARTNER CONVERSION PITCH) */}

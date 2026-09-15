@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
-import { AssessmentSubmission, AdminStats } from '../src/types.js';
+import { AssessmentSubmission, AdminStats } from '../../src/types.js';
+import { SEEDED_ASSESSMENTS } from '../../src/data/seededAssessments.js';
 
 const STORE_NAME = 'assessments';
 

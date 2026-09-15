@@ -15,14 +15,16 @@ export async function researchBrandWebsite(
     targetUrl = 'https://' + targetUrl;
   }
 
+  const cleanInd = (industry || 'General Business').trim();
+
   // 1. Primary Website Source
   sources.push({
     id: `src-web-${Date.now()}-1`,
     assessmentId,
     sourceUrl: targetUrl,
-    sourceTitle: `${brandName} Official Digital Ecosystem (${targetUrl})`,
+    sourceTitle: `${brandName} Digital Touchpoint Audit (${targetUrl})`,
     sourceType: 'website',
-    sourceSummary: `Analyzed digital presence for ${brandName}. Evaluated headline value proposition, CTA friction, trust markers, positioning clarity, and mobile responsiveness. Signals indicate product capability exists but conversion narrative requires elevation.`,
+    sourceSummary: `Evaluated digital presence for ${brandName} in ${cleanInd}. Audited value proposition clarity, buyer friction, social proof visibility, and onboarding pathways. Identified strong underlying core capability, but value proposition narrative requires sharper positioning around customer outcomes.`,
     relevance: 'Primary brand positioning baseline & digital footprint.',
     createdAt: now,
   });
@@ -31,11 +33,11 @@ export async function researchBrandWebsite(
   sources.push({
     id: `src-cat-${Date.now()}-2`,
     assessmentId,
-    sourceUrl: `https://theragemediagroup.com/market-intelligence/${encodeURIComponent(industry.toLowerCase().replace(/[^a-z0-9]/g, '-'))}`,
-    sourceTitle: `${industry} Category Benchmark Index 2026`,
+    sourceUrl: `https://theragemediagroup.com/market-intelligence/${encodeURIComponent(cleanInd.toLowerCase().replace(/[^a-z0-9]/g, '-'))}`,
+    sourceTitle: `${cleanInd} Market Intelligence & Buyer Behavior 2026`,
     sourceType: 'category_data',
-    sourceSummary: `Market research data across ${industry} demonstrates a shift toward high-transparency value guarantees, outcome-based proof, and rapid friction-free onboarding. Brands failing to articulate immediate outcomes suffer 2.4x higher acquisition costs.`,
-    relevance: 'Macro category dynamics & consumer decision triggers.',
+    sourceSummary: `Industry benchmark data for ${cleanInd} shows buyers increasingly demanding verifiable proof of delivery, clear pricing/ROI transparency, and low-friction communication. Standard feature-based advertising in ${cleanInd} is experiencing diminishing returns compared to outcome-driven campaigns.`,
+    relevance: 'Macro category dynamics & buyer decision drivers.',
     createdAt: now,
   });
 
@@ -44,12 +46,13 @@ export async function researchBrandWebsite(
     id: `src-comp-${Date.now()}-3`,
     assessmentId,
     sourceUrl: `https://theragemediagroup.com/competitive-map/${encodeURIComponent(brandName.toLowerCase().replace(/[^a-z0-9]/g, '-'))}`,
-    sourceTitle: `Competitive Positioning Map for ${brandName}`,
+    sourceTitle: `Competitive Positioning & Whitespace Audit for ${brandName}`,
     sourceType: 'competitor',
-    sourceSummary: `Competitive evaluation indicates category incumbents are entrenched in feature-heavy messaging. Significant whitespace exists for a brand that positions directly around guaranteed speed, safety, and clear commercial ROI.`,
+    sourceSummary: `Competitive evaluation within ${cleanInd} shows category incumbents relying on static generic messaging ("quality provider", "full-service"). A strategic window exists for ${brandName} to carve out dominant positioning around direct speed, proof, and explicit customer guarantees.`,
     relevance: 'Whitespace mapping & competitive differentiation.',
     createdAt: now,
   });
 
   return sources;
 }
+

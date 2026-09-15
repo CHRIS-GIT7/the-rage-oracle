@@ -5,10 +5,13 @@ import { LandingPage } from './components/LandingPage';
 import { AssessmentForm } from './components/AssessmentForm';
 import { ProcessingView } from './components/ProcessingView';
 import { ReportView } from './components/ReportView';
+import { ReportSkeletonLoader } from './components/ReportSkeletonLoader';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { AssessmentSubmission } from './types';
 import { SEEDED_ASSESSMENTS } from './data/seededAssessments';
+import { researchBrandWebsite } from './lib/research';
+import { analyzeBrandWithGemini } from './lib/gemini';
 
 export function App() {
   const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'processing' | 'report' | 'admin' | 'admin_login'>('landing');
@@ -16,10 +19,30 @@ export function App() {
   const [pendingBrandName, setPendingBrandName] = useState<string>('');
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
 
+  // Start new assessment cleanly
+  const handleStartAssessment = () => {
+    setActiveSubmission(null);
+    setPendingBrandName('');
+    try {
+      localStorage.removeItem('brand_oracle_draft_v1');
+    } catch {}
+    setCurrentView('assessment');
+  };
+
   // Form submission handler
   const handleFormSubmit = async (formData: Omit<AssessmentSubmission, 'id' | 'createdAt' | 'status' | 'emailStatus'>) => {
     setPendingBrandName(formData.business.brandName);
+    setActiveSubmission(null); // Clear previous submission to ensure skeleton loader shows until ready
     setCurrentView('processing');
+
+    const id = 'ora-' + Date.now();
+    const newSubmission: AssessmentSubmission = {
+      ...formData,
+      id,
+      createdAt: new Date().toISOString(),
+      status: 'analyzing',
+      emailStatus: 'pending',
+    };
 
     try {
       const response = await fetch('/api/assessments', {
@@ -35,33 +58,28 @@ export function App() {
         throw new Error(data.error || 'Failed to analyze brand');
       }
     } catch (err) {
-      const fallbackAnalysis = {
-        ...SEEDED_ASSESSMENTS[0].analysis,
-        id: 'ana-client-' + Date.now(),
-        executiveVerdict: `${formData.business.brandName} demonstrates clear potential in ${formData.business.industry}, but requires immediate strategic refinement to address conversion friction and maximize customer trust in the local market.`,
-      };
-
-      const fallback: AssessmentSubmission = {
-        ...formData,
-        id: 'ora-client-' + Date.now(),
-        createdAt: new Date().toISOString(),
-        status: 'completed',
-        emailStatus: 'sent',
-        analysis: fallbackAnalysis,
-        sources: [
-          {
-            id: `src-web-${Date.now()}-1`,
-            assessmentId: 'ora-client',
-            sourceUrl: formData.business.website.startsWith('http') ? formData.business.website : `https://${formData.business.website}`,
-            sourceTitle: `${formData.business.brandName} Official Digital Ecosystem`,
-            sourceType: 'website',
-            sourceSummary: `Analyzed digital presence for ${formData.business.brandName}. Evaluated headline value proposition and positioning clarity.`,
-            relevance: 'Primary brand positioning baseline.',
-            createdAt: new Date().toISOString(),
-          }
-        ],
-      };
-      setActiveSubmission(fallback);
+      console.warn('Backend API request fell back to client-side AI engine:', err);
+      try {
+        const researchSources = await researchBrandWebsite(
+          id,
+          formData.business.website,
+          formData.business.brandName,
+          formData.business.industry
+        );
+        const oracleAnalysis = await analyzeBrandWithGemini(newSubmission, researchSources);
+        const completedSubmission: AssessmentSubmission = {
+          ...newSubmission,
+          status: 'completed',
+          reportUrl: `/report/${id}`,
+          emailStatus: 'sent',
+          emailSentAt: new Date().toISOString(),
+          analysis: oracleAnalysis,
+          sources: researchSources,
+        };
+        setActiveSubmission(completedSubmission);
+      } catch (innerErr) {
+        console.error('Client-side analysis error:', innerErr);
+      }
     }
   };
 
@@ -75,7 +93,9 @@ export function App() {
   };
 
   const handleNavigate = (view: 'landing' | 'assessment' | 'admin' | 'admin_login') => {
-    if (view === 'admin' && !isAdminLoggedIn) {
+    if (view === 'assessment') {
+      handleStartAssessment();
+    } else if (view === 'admin' && !isAdminLoggedIn) {
       setCurrentView('admin_login');
     } else {
       setCurrentView(view);
@@ -110,7 +130,7 @@ export function App() {
       <main className="flex-1">
         {currentView === 'landing' && (
           <LandingPage
-            onStartAssessment={() => setCurrentView('assessment')}
+            onStartAssessment={handleStartAssessment}
             onOpenSampleReport={handleOpenSampleReport}
           />
         )}
@@ -129,11 +149,15 @@ export function App() {
           />
         )}
 
-        {currentView === 'report' && activeSubmission && (
-          <ReportView
-            submission={activeSubmission}
-            onBackToMain={() => setCurrentView('landing')}
-          />
+        {currentView === 'report' && (
+          activeSubmission && activeSubmission.analysis ? (
+            <ReportView
+              submission={activeSubmission}
+              onBackToMain={() => setCurrentView('landing')}
+            />
+          ) : (
+            <ReportSkeletonLoader brandName={pendingBrandName || activeSubmission?.business?.brandName} />
+          )
         )}
 
         {currentView === 'admin_login' && (
@@ -156,3 +180,4 @@ export function App() {
 }
 
 export default App;
+

@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={() => onNavigate('admin')}
                 className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded text-xs font-bold transition-all ${
                   currentView === 'admin'
-                    ? 'bg-white text-black'
+                    ? 'bg-white text-black' 
                     : 'bg-[#18181B] text-white border border-[#27272A] hover:bg-[#27272A]'
                 }`}
                 title="Admin Dashboard"
