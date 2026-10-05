@@ -1,6 +1,6 @@
 import React from 'react';
 import { AGENCY_CONFIG } from '../data/agencyConfig';
-import { Sparkles, Shield, BarChart3, ChevronRight, FileText } from 'lucide-react';
+import { Sparkles, BarChart3, ChevronRight, FileText } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface HeaderProps {
@@ -54,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>SAMPLE REPORT</span>
           </button>
 
-          {isAdminLoggedIn ? (
+          {isAdminLoggedIn && (
             <div className="flex items-center gap-1 sm:gap-2">
               <button
                 onClick={() => onNavigate('admin')}
@@ -76,15 +76,6 @@ export const Header: React.FC<HeaderProps> = ({
                 LOGOUT
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => onNavigate('admin_login')}
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded text-xs font-semibold text-neutral-400 hover:text-white hover:bg-[#18181B] transition-colors"
-              title="Admin Login"
-            >
-              <Shield className="w-4 h-4 sm:w-3.5 sm:h-3.5 text-neutral-400" />
-              <span className="hidden sm:inline">AGENCY ADMIN</span>
-            </button>
           )}
 
           {currentView !== 'assessment' && (

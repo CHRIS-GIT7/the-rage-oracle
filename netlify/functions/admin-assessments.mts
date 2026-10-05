@@ -1,10 +1,15 @@
 import type { Config, Context } from '@netlify/functions';
 import { getAllAssessments, deleteAssessment } from '../lib/blobStore.js';
+import { isAdminCookieValid } from '../../src/lib/adminAuth.js';
 
 export default async function handler(req: Request, context: Context) {
+  if (!isAdminCookieValid(req.headers.get('cookie'))) {
+    return Response.json({ success: false, error: 'Admin sign-in required.' }, { status: 401 });
+  }
+
   if (req.method === 'GET') {
     const list = await getAllAssessments();
-    return Response.json({ success: true, assessments: list });
+    return Response.json({ success: true, assessments: list }, { headers: { 'Cache-Control': 'no-store' } });
   }
 
   if (req.method === 'DELETE') {

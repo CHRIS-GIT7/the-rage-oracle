@@ -20,18 +20,18 @@ import {
   ChevronLeft,
   Check,
   AlertCircle,
-  Save,
-  Sparkles
+  Save
 } from 'lucide-react';
 
 interface AssessmentFormProps {
-  onSubmit: (submission: Omit<AssessmentSubmission, 'id' | 'createdAt' | 'status' | 'emailStatus'>) => void;
+  onSubmit: (submission: Omit<AssessmentSubmission, 'id' | 'createdAt' | 'status' | 'emailStatus'>) => Promise<boolean>;
   onCancel: () => void;
+  submissionError?: string | null;
 }
 
 const FORM_STORAGE_KEY = 'brand_oracle_draft_v1';
 
-export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCancel }) => {
+export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCancel, submissionError }) => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [validationError, setValidationError] = useState<string | null>(null);
 
@@ -39,6 +39,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
   const [business, setBusiness] = useState<BusinessInfo>({
     brandName: '',
     website: '',
+    socialLinks: [],
     industry: '',
     market: '',
     productDescription: '',
@@ -62,18 +63,19 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
     customerProblem: '',
     searchTrigger: '',
     hesitationReasons: '',
-    topValueDrivers: ['Trust', 'Quality', 'Results'],
+    topValueDrivers: [],
     geographicMarkets: '',
     planningExpansion: 'Unsure',
     expansionTarget: '',
   });
 
   const [marketing, setMarketing] = useState<MarketingInfo>({
-    activeChannels: ['LinkedIn', 'Google Search'],
+    activeChannels: [],
     bestPerformingActivity: '',
     failedActivity: '',
     runningPaidAds: 'No',
-    monthlyBudget: '₦500,000–₦1m',
+    monthlyBudget: '',
+    monthlyBudgetCurrency: 'NGN',
   });
 
   const [strategy, setStrategy] = useState<StrategicQuestions>({
@@ -90,7 +92,9 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
     email: '',
     companyName: '',
     phone: '',
-    allowFollowUp: true,
+    allowFollowUp: false,
+    privacyConsent: false,
+    requestWhatsAppReport: false,
   });
 
   // Load local draft on mount
@@ -104,7 +108,14 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
         if (draft.customer) setCustomer(draft.customer);
         if (draft.marketing) setMarketing(draft.marketing);
         if (draft.strategy) setStrategy(draft.strategy);
-        if (draft.contact) setContact(draft.contact);
+        if (draft.contact) {
+          setContact({
+            ...draft.contact,
+            allowFollowUp: draft.contact.privacyConsent ? Boolean(draft.contact.allowFollowUp) : false,
+            privacyConsent: Boolean(draft.contact.privacyConsent),
+            requestWhatsAppReport: Boolean(draft.contact.requestWhatsAppReport),
+          });
+        }
       }
     } catch (e) {
       console.warn('Could not load draft', e);
@@ -153,12 +164,18 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
     } else if (step === 3) {
       if (!customer.customerProblem.trim()) { setValidationError('Please describe the main problem your customers face.'); return false; }
       if (customer.topValueDrivers.length === 0) { setValidationError('Please select at least one value driver.'); return false; }
+    } else if (step === 4) {
+      if (marketing.monthlyBudgetCurrency === 'Other' && !marketing.monthlyBudgetCurrencyOther?.trim()) {
+        setValidationError('Please enter the currency for your monthly budget.');
+        return false;
+      }
     } else if (step === 5) {
-      if (!strategy.oneThingToFix.trim()) { setValidationError('Please state the one thing you would fix immediately.'); return false; }
       if (!strategy.growthBlocker.trim()) { setValidationError('Please describe what is stopping growth.'); return false; }
     } else if (step === 6) {
       if (!contact.fullName.trim()) { setValidationError('Full name is required.'); return false; }
       if (!contact.email.trim() || !contact.email.includes('@')) { setValidationError('Valid email address is required.'); return false; }
+      if (!contact.phone?.trim()) { setValidationError('Phone number is required.'); return false; }
+      if (!contact.privacyConsent) { setValidationError('Please read and accept the privacy notice to continue.'); return false; }
     }
 
     return true;
@@ -183,81 +200,17 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validateStep(6)) return;
-
-    // Clear draft on submission
-    localStorage.removeItem(FORM_STORAGE_KEY);
-
-    onSubmit({
-      business,
-      brand,
-      customer,
-      marketing,
-      strategy,
-      contact,
-    });
-  };
-
-  const handleLoadRageMediaGroupSample = () => {
-    setBusiness({
-      brandName: 'The RAGE Media Group',
-      website: 'https://theragemediagroup.com/',
-      industry: 'Digital Marketing, Branding, PR & Web Design',
-      market: 'Nigeria, Pan-African & Global Markets',
-      productDescription: 'Comprehensive digital marketing, brand identity design, strategic PR, outdoor billboard advertising, web & mobile app development, social media management, and commercial printing services.',
-      yearsOperating: '8–15 years',
-      businessSize: '201–500',
-      primaryObjective: 'Acquire more customers',
-      twelveMonthGoal: 'Scale enterprise client retainers and expand multi-channel branding, PR, and web development campaigns across African and international markets.',
-    });
-
-    setBrand({
-      brandKnownFor: 'Comprehensive 360° digital marketing, iconic brand identity design, strategic PR, high-impact outdoor billboards, and web development.',
-      primaryCustomer: 'Founders, CEOs, CMOs, corporate enterprises, and ambitious SMEs seeking market dominance across Nigeria and globally.',
-      whyChooseUs: 'Full-service marketing ecosystem combining creative branding, strategic PR, high-visibility advertising, and custom web/app solutions under one roof.',
-      keyDifferentiator: 'Complete 360-degree media integration—from digital campaigns and PR to physical billboards, printing, and custom software development.',
-      topCompetitors: 'Traditional Ad Agencies, PR Consultancies, Digital Marketing & Web Development Agencies',
-      perceivedBrandImage: 'Leading full-service digital marketing agency in Nigeria known for bold branding, PR execution, and high-impact multi-channel campaigns.',
-      biggestConcern: 'Streamlining campaign performance tracking across traditional outdoor media and digital web/social channels.',
-    });
-
-    setCustomer({
-      customerProblem: 'Businesses struggle to build strong brand presence, generate consistent qualified leads, and execute integrated campaigns across digital and traditional channels.',
-      searchTrigger: 'Launching a new brand or product line, business expansion, needing professional PR/billboards, or struggling with web conversion and social media engagement.',
-      hesitationReasons: 'Budget allocation between digital vs. traditional channels (billboards/TV), campaign ROI proof, and vendor consolidation.',
-      topValueDrivers: ['Trust', 'Results', 'Quality', 'Reputation', 'Customer service'],
-      geographicMarkets: 'Nigeria, West Africa, Pan-African & International Markets',
-      planningExpansion: 'Yes',
-      expansionTarget: 'Pan-African and International Corporate Markets.',
-    });
-
-    setMarketing({
-      activeChannels: ['LinkedIn', 'Google Search', 'Instagram', 'TikTok', 'Facebook', 'Youtube', 'X', 'Meta Ads', 'Email', 'PR'],
-      bestPerformingActivity: 'Integrated social media management, targeted Google Search campaigns, and strategic PR releases.',
-      failedActivity: 'Generic un-targeted ad campaigns without clear multi-channel follow-up.',
-      runningPaidAds: 'Yes',
-      monthlyBudget: '₦5m–₦10m',
-    });
-
-    setStrategy({
-      oneThingToFix: 'Streamline multi-channel lead tracking and convert website traffic into high-value campaign inquiries.',
-      growthBlocker: 'Expanding agency service delivery capacity to keep up with high demand for integrated PR, billboard, and web development campaigns.',
-      biggestQuestion: 'How can we maximize campaign ROI and position Rage Media Group as the top 360° marketing and branding partner across Africa?',
-      reportValueFactor: 'A clear growth roadmap, multi-channel positioning breakdown, and actionable campaign strategy.',
-      additionalContext: 'Primary website https://theragemediagroup.com/. Leading digital marketing agency in Nigeria providing branding, PR, advertising, billboards, social media, and web design.',
-    });
-
-    setContact({
-      fullName: 'Rage Media Group Team',
-      jobTitle: 'Client Growth Director',
-      email: 'contact@theragemediagroup.com',
-      companyName: 'The RAGE Media Group',
-      phone: '+234 800 000 0000',
-      allowFollowUp: true,
-    });
-
-    setValidationError(null);
+    const submitted = await onSubmit({
+        business,
+        brand,
+        customer: { ...customer, geographicMarkets: business.market },
+        marketing,
+        strategy,
+        contact: { ...contact, companyName: business.brandName },
+      });
+    if (submitted) localStorage.removeItem(FORM_STORAGE_KEY);
   };
 
   const toggleValueDriver = (driver: string) => {
@@ -292,7 +245,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
 
   const channelOptions = [
     'Instagram', 'Facebook', 'TikTok', 'LinkedIn', 'X', 'YouTube',
-    'Google Search', 'Google Ads', 'Meta Ads', 'Email', 'Influencer marketing',
+    'Google Search', 'Google Ads', 'Meta Ads', 'WhatsApp', 'Email', 'Influencer marketing',
     'TV', 'Radio', 'Outdoor', 'Events', 'PR', 'SEO', 'Other'
   ];
 
@@ -304,15 +257,15 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
           <div className="flex items-center justify-between mb-3">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                DIAGNOSTIC PROTOCOL // PARAMETER ENTRY
+                Your assessment
               </span>
               <h2 className="text-xl font-extrabold text-white uppercase tracking-tight">
-                STEP 0{currentStep}: {steps[currentStep - 1].label.toUpperCase()}
+                STEP {currentStep} OF 6: {steps[currentStep - 1].label.toUpperCase()}
               </h2>
             </div>
             <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-300 bg-[#121215] px-3 py-1 rounded border border-[#27272A]">
               <Save className="w-3.5 h-3.5 text-white" />
-              <span>AUTOSAVED</span>
+              <span>Saved as you go</span>
             </div>
           </div>
 
@@ -351,31 +304,11 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
           </div>
         </div>
 
-        {/* Test Run Sample Banner */}
-        <div className="mb-4 p-4 bg-[#121215] border border-[#27272A] rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
-          <div>
-            <div className="text-xs font-extrabold text-white uppercase flex items-center gap-1.5 tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-              <span>TEST RUN SAMPLE PRESET</span>
-            </div>
-            <p className="text-xs text-neutral-400 mt-0.5 font-medium">
-              Want to run a real-time test? Load analyzed data for <strong className="text-white font-bold">The RAGE Media Group (theragemediagroup.com)</strong>.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={handleLoadRageMediaGroupSample}
-            className="px-4 py-2 bg-white text-black text-xs font-extrabold uppercase rounded-lg hover:bg-neutral-200 transition-all shrink-0 shadow-md border border-white"
-          >
-            Load theragemediagroup.com
-          </button>
-        </div>
-
         {/* Validation Error Alert */}
-        {validationError && (
+        {(validationError || submissionError) && (
           <div className="mb-4 p-3 rounded bg-neutral-900 border border-neutral-700 text-white text-xs font-medium flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-white shrink-0" />
-            <span>{validationError}</span>
+            <span>{validationError || submissionError}</span>
           </div>
         )}
 
@@ -426,16 +359,35 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                    Country / Primary Market <span className="text-white font-bold">*</span>
+                    Main markets you serve <span className="text-white font-bold">*</span>
                   </label>
                   <input
                     type="text"
                     value={business.market}
                     onChange={e => setBusiness({ ...business, market: e.target.value })}
-                    placeholder="e.g. United States, Nigeria, Global"
+                    placeholder="e.g. Lagos and Abuja, Nigeria; Ghana; United Kingdom"
                     className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
+                  Website or social media links for us to review
+                </label>
+                <textarea
+                  rows={2}
+                  value={(business.socialLinks || []).join('\n')}
+                  onChange={e => setBusiness({
+                    ...business,
+                    socialLinks: e.target.value.split(/[\n,]+/).map(link => link.trim()).filter(Boolean),
+                  })}
+                  placeholder="Paste public Instagram, LinkedIn, TikTok or other profile links (one per line)"
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
+                />
+                <p className="text-[11px] text-neutral-500 mt-2">
+                  We’ll try to review public pages. Some platforms limit automated access, so we may not be able to read every profile.
+                </p>
               </div>
 
               <div>
@@ -626,7 +578,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
             <div className="space-y-6">
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  What is the biggest problem your customers are trying to solve? <span className="text-white font-bold">*</span>
+                  What problem sends customers looking for a solution like yours? <span className="text-white font-bold">*</span>
                 </label>
                 <textarea
                   rows={2}
@@ -634,19 +586,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                   onChange={e => setCustomer({ ...customer, customerProblem: e.target.value })}
                   placeholder="e.g. Rebalancing complex portfolios manually takes 18+ hours a week..."
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  What usually causes customers to search for your product/service?
-                </label>
-                <input
-                  type="text"
-                  value={customer.searchTrigger}
-                  onChange={e => setCustomer({ ...customer, searchTrigger: e.target.value })}
-                  placeholder="e.g. Market volatility spikes or regulatory audits..."
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                 />
               </div>
 
@@ -660,6 +599,19 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                   onChange={e => setCustomer({ ...customer, hesitationReasons: e.target.value })}
                   placeholder="e.g. Data security concerns, migration hassle, price..."
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
+                  What steps do customers take from first hearing about you to becoming repeat customers?
+                </label>
+                <textarea
+                  rows={3}
+                  value={customer.customerJourney || ''}
+                  onChange={e => setCustomer({ ...customer, customerJourney: e.target.value })}
+                  placeholder="For an app, you might include downloads, completed registrations, where people stop during sign-up, and how often they return."
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                 />
               </div>
 
@@ -687,21 +639,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                    Geographic Markets Served
-                  </label>
-                  <input
-                    type="text"
-                    value={customer.geographicMarkets}
-                    onChange={e => setCustomer({ ...customer, geographicMarkets: e.target.value })}
-                    placeholder="e.g. US, UK, West Africa"
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
-                  />
-                </div>
-
-                <div>
+              <div>
                   <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
                     Planning Geographic Expansion?
                   </label>
@@ -714,7 +652,6 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                     <option value="No">No</option>
                     <option value="Unsure">Unsure</option>
                   </select>
-                </div>
               </div>
 
               {customer.planningExpansion === 'Yes' && (
@@ -806,19 +743,37 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                   <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
                     Approximate Monthly Marketing Budget
                   </label>
-                  <select
-                    value={marketing.monthlyBudget}
-                    onChange={e => setMarketing({ ...marketing, monthlyBudget: e.target.value })}
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white font-sans"
-                  >
-                    <option value="Under ₦100,000">Under ₦100,000</option>
-                    <option value="₦100,000–₦500,000">₦100,000–₦500,000</option>
-                    <option value="₦500,000–₦1m">₦500,000–₦1m</option>
-                    <option value="₦1m–₦5m">₦1m–₦5m</option>
-                    <option value="₦5m–₦10m">₦5m–₦10m</option>
-                    <option value="₦10m+">₦10m+</option>
-                    <option value="Prefer not to say">Prefer not to say</option>
-                  </select>
+                  <div className="grid grid-cols-[minmax(0,1fr)_130px] gap-2">
+                    <input
+                      type="text"
+                      value={marketing.monthlyBudget}
+                      onChange={e => setMarketing({ ...marketing, monthlyBudget: e.target.value })}
+                      placeholder="e.g. 500,000–1,000,000"
+                      className="min-w-0 bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
+                    />
+                    <select
+                      value={marketing.monthlyBudgetCurrency || 'NGN'}
+                      onChange={e => setMarketing({ ...marketing, monthlyBudgetCurrency: e.target.value })}
+                      aria-label="Budget currency"
+                      className="bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-white font-sans"
+                    >
+                      <option value="NGN">NGN (₦)</option>
+                      <option value="USD">USD ($)</option>
+                      <option value="GBP">GBP (£)</option>
+                      <option value="EUR">EUR (€)</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  {marketing.monthlyBudgetCurrency === 'Other' && (
+                    <input
+                      type="text"
+                      value={marketing.monthlyBudgetCurrencyOther || ''}
+                      onChange={e => setMarketing({ ...marketing, monthlyBudgetCurrencyOther: e.target.value })}
+                      placeholder="Enter currency (e.g. KES)"
+                      aria-label="Other budget currency"
+                      className="mt-2 w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -829,53 +784,27 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
             <div className="space-y-6">
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  If you could fix ONE thing about your brand immediately, what would it be? <span className="text-white font-bold">*</span>
-                </label>
-                <textarea
-                  rows={2}
-                  value={strategy.oneThingToFix}
-                  onChange={e => setStrategy({ ...strategy, oneThingToFix: e.target.value })}
-                  placeholder="e.g. Our core messaging—it sounds like a spec sheet instead of a partner..."
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  What do you believe is currently stopping your business from growing? <span className="text-white font-bold">*</span>
+                  What is the main thing holding back your business growth? <span className="text-white font-bold">*</span>
                 </label>
                 <textarea
                   rows={2}
                   value={strategy.growthBlocker}
-                  onChange={e => setStrategy({ ...strategy, growthBlocker: e.target.value })}
-                  placeholder="e.g. High customer acquisition cost and long sales friction..."
+                  onChange={e => setStrategy({ ...strategy, growthBlocker: e.target.value, oneThingToFix: e.target.value })}
+                  placeholder="For example, customers struggle to understand the value before they speak to our team."
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  What is the biggest marketing question you wish someone could answer for you?
+                  What would you most like this report to help you decide?
                 </label>
                 <textarea
                   rows={2}
-                  value={strategy.biggestQuestion}
-                  onChange={e => setStrategy({ ...strategy, biggestQuestion: e.target.value })}
-                  placeholder="e.g. How do we position as market leaders without pricing out mid-market clients?"
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  What would make this report genuinely valuable to you?
-                </label>
-                <input
-                  type="text"
                   value={strategy.reportValueFactor}
-                  onChange={e => setStrategy({ ...strategy, reportValueFactor: e.target.value })}
-                  placeholder="e.g. A clear 90-day actionable roadmap our team can execute."
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
+                  onChange={e => setStrategy({ ...strategy, reportValueFactor: e.target.value, biggestQuestion: e.target.value })}
+                  placeholder="For example, which channel to prioritise or how to improve repeat purchases."
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl p-4 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                 />
               </div>
 
@@ -899,7 +828,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
             <div className="space-y-6">
               <div className="p-4 rounded-xl bg-[#18181B] border border-[#27272A] text-xs text-neutral-300 leading-relaxed">
                 <p className="font-extrabold text-white mb-1 uppercase tracking-wider">Your Report Delivery Details</p>
-                Your customized The RAGE Oracle™ PDF report will be generated and dispatched directly to the email provided below.
+                We’ll prepare your report after you submit. Your email and phone number let us deliver the report and contact you about it if needed.
               </div>
 
               <div>
@@ -943,26 +872,14 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  Company Name
-                </label>
-                <input
-                  type="text"
-                  value={contact.companyName}
-                  onChange={e => setContact({ ...contact, companyName: e.target.value })}
-                  placeholder="e.g. Apex Fintech Solutions"
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  Phone Number (Optional)
+                  Phone Number <span className="text-white font-bold">*</span> 
                 </label>
                 <input
                   type="tel"
                   value={contact.phone || ''}
                   onChange={e => setContact({ ...contact, phone: e.target.value })}
-                  placeholder="+1 (555) 000-0000"
+                  placeholder="+234 800 000 0000"
+                  required
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-4 py-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-white font-sans"
                 />
               </div>
@@ -971,12 +888,41 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
+                    checked={contact.requestWhatsAppReport || false}
+                    onChange={e => setContact({ ...contact, requestWhatsAppReport: e.target.checked })}
+                    className="mt-1 rounded bg-[#18181B] border-[#27272A] text-white focus:ring-white"
+                  />
+                  <span className="text-xs text-neutral-400 leading-relaxed font-medium">
+                    I’d also like to request my report through WhatsApp at the number above.
+                  </span>
+                </label>
+              </div>
+
+              <div>
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
                     checked={contact.allowFollowUp}
                     onChange={e => setContact({ ...contact, allowFollowUp: e.target.checked })}
                     className="mt-1 rounded bg-[#18181B] border-[#27272A] text-white focus:ring-white"
                   />
                   <span className="text-xs text-neutral-400 leading-relaxed font-medium">
-                    Would you like a senior strategist from {AGENCY_CONFIG.name} to review your report with you via a brief strategy call?
+                    I’d like a strategist from {AGENCY_CONFIG.name} to contact me about discussing my report or booking a call.
+                  </span>
+                </label>
+              </div>
+
+              <div className="pt-2">
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={contact.privacyConsent || false}
+                    onChange={e => setContact({ ...contact, privacyConsent: e.target.checked })}
+                    className="mt-1 rounded bg-[#18181B] border-[#27272A] text-white focus:ring-white"
+                    required
+                  />
+                  <span className="text-xs text-neutral-400 leading-relaxed font-medium">
+                    I have read the <a href="#privacy-notice" className="text-white underline">privacy notice</a> and agree that my details may be used to prepare and deliver this assessment. <span className="text-white">*</span>
                   </span>
                 </label>
               </div>

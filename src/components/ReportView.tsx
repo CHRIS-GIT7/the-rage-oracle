@@ -5,7 +5,6 @@ import { downloadReportAsPDF } from '../lib/pdfGenerator';
 import { Logo } from './Logo';
 import { 
   Download, 
-  Send, 
   Sparkles, 
   CheckCircle2, 
   AlertTriangle, 
@@ -27,9 +26,9 @@ interface ReportViewProps {
 }
 
 export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain }) => {
+  const isSampleReport = submission.id.startsWith('ora-seed-') || submission.id.startsWith('ora-sample-');
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
-  const [emailStatusMessage, setEmailStatusMessage] = useState<string | null>(null);
-  const [isSendingEmail, setIsSendingEmail] = useState<boolean>(false);
+  const [isFullReportVisible, setIsFullReportVisible] = useState<boolean>(false);
 
   const analysis = submission.analysis;
 
@@ -39,37 +38,22 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
 
   const handleDownloadPDF = async () => {
     setIsDownloading(true);
-    const success = await downloadReportAsPDF(
+    setIsFullReportVisible(true);
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
+    await downloadReportAsPDF(
       'report-print-container',
       `Brand_Oracle_Report_${submission.business.brandName.replace(/[^a-zA-Z0-9]/g, '_')}.pdf`
     );
     setIsDownloading(false);
   };
 
-  const handleResendEmail = async () => {
-    setIsSendingEmail(true);
-    setEmailStatusMessage(null);
-    try {
-      const res = await fetch(`/api/assessments/${submission.id}/email`, { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ submission }),
-      });
-      const data = await res.json();
-      if (data.success && data.message) {
-        setEmailStatusMessage(data.message);
-      } else {
-        setEmailStatusMessage(`Strategic report email dispatched to ${submission.contact.email}`);
-      }
-    } catch (e) {
-      setEmailStatusMessage(`Strategic report email dispatched to ${submission.contact.email}`);
-    } finally {
-      setIsSendingEmail(false);
-    }
-  };
-
   return (
     <div className="bg-[#000000] min-h-screen text-neutral-200 pb-24 selection:bg-white selection:text-black font-sans">
+      {isSampleReport && (
+        <p className="max-w-6xl mx-auto px-4 pt-4 text-xs text-neutral-400">
+          Example only: the sample businesses and assessment details are fictional and are provided to illustrate the report.
+        </p>
+      )}
       {/* Sticky Action Controls Header */}
       <div className="sticky top-20 z-40 bg-[#09090B]/95 backdrop-blur-md border-b border-[#27272A] px-4 py-3 shadow-2xl">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
@@ -87,24 +71,14 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
                 {submission.business.brandName}
               </span>
               <span className="text-neutral-400 ml-2 text-xs font-medium">
-                [{submission.id}]
               </span>
             </div>
             <div className="px-3 py-1 rounded bg-white text-black font-extrabold text-xs border border-white">
-              CLARITY INDEX: {analysis.brandClarityIndex}/100
+              GROWTH SCORE: {analysis.brandClarityIndex}/100
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={handleResendEmail}
-              disabled={isSendingEmail}
-              className="px-3.5 py-2 rounded-lg text-xs font-bold text-white bg-[#18181B] hover:bg-[#27272A] border border-[#27272A] transition-all flex items-center gap-1.5 uppercase tracking-wider"
-            >
-              <Send className="w-3.5 h-3.5 text-white" />
-              <span>{isSendingEmail ? 'Dispatching...' : 'Email Report'}</span>
-            </button>
-
             <button
               onClick={handleDownloadPDF}
               disabled={isDownloading}
@@ -116,14 +90,14 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           </div>
         </div>
 
-        {emailStatusMessage && (
+        {!isSampleReport && submission.emailDeliveryMessage && (
           <div className="max-w-6xl mx-auto mt-2 text-center text-xs font-semibold text-white bg-[#18181B] py-1 rounded border border-[#27272A]">
-            {emailStatusMessage}
+            {submission.emailDeliveryMessage}
           </div>
         )}
       </div>
 
-      {/* Main Condensed 5-Module Report Container */}
+      {/* Main five-module report */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-10 space-y-12 font-sans" id="report-print-container">
         
         {/* MODULE 1: COVER & EXECUTIVE DIAGNOSIS */}
@@ -158,12 +132,12 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-neutral-100 text-neutral-800 text-xs font-extrabold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5 text-neutral-800" />
-              <span>EXECUTIVE SUMMARY & BRAND SCORE</span>
+              <span>MODULE 1 • SUMMARY</span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black text-[#000000] tracking-tight uppercase leading-tight">
               BRAND GROWTH ASSESSMENT FOR {submission.business.brandName}
             </h1>
-            <p className="text-sm text-neutral-700 leading-relaxed font-medium bg-neutral-50 p-5 rounded-xl border border-neutral-200 italic">
+            <p className="text-sm text-neutral-700 leading-relaxed font-medium bg-neutral-50 p-5 rounded-xl border border-neutral-200">
               "{analysis.executiveVerdict}"
             </p>
           </div>
@@ -171,39 +145,74 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           {/* Scores Overview Dial */}
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-4 items-center bg-[#09090B] text-white p-6 rounded-xl border border-neutral-800" style={{ backgroundColor: '#09090B', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
             <div className="sm:col-span-2 text-center sm:border-r border-neutral-800 sm:pr-6">
-              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">BRAND CLARITY INDEX™</span>
+              <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest block">BRAND GROWTH SCORE</span>
               <div className="text-5xl font-black text-white my-1">
                 {analysis.brandClarityIndex}<span className="text-lg text-neutral-500 font-bold">/100</span>
               </div>
-              <p className="text-[10px] font-semibold text-neutral-400 uppercase">Overall Business Growth Score</p>
+              <p className="text-[10px] font-semibold text-neutral-400">A quick guide based on the information provided, not a guarantee of results.</p>
             </div>
 
             <div className="sm:col-span-3 grid grid-cols-2 gap-3 text-xs">
               <div className="bg-[#18181B] p-3 rounded-lg border border-neutral-800">
-                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Uniqueness</span>
+                <span className="text-[10px] text-neutral-400 uppercase font-bold block">How clearly you stand out</span>
                 <span className="text-lg font-black text-white">{analysis.differentiationStrength}/100</span>
               </div>
               <div className="bg-[#18181B] p-3 rounded-lg border border-neutral-800">
-                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Customer Depth</span>
+                <span className="text-[10px] text-neutral-400 uppercase font-bold block">How well you know customers</span>
                 <span className="text-lg font-black text-white">{analysis.customerUnderstanding}/100</span>
               </div>
               <div className="bg-[#18181B] p-3 rounded-lg border border-neutral-800">
-                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Market Opportunity</span>
+                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Room to grow in your market</span>
                 <span className="text-lg font-black text-white">{analysis.marketOpportunity}/100</span>
               </div>
               <div className="bg-[#18181B] p-3 rounded-lg border border-neutral-800">
-                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Growth Readiness</span>
+                <span className="text-[10px] text-neutral-400 uppercase font-bold block">Readiness to grow</span>
                 <span className="text-lg font-black text-white">{analysis.growthReadiness}/100</span>
               </div>
             </div>
           </div>
         </div>
 
+        {!isFullReportVisible && (
+          <section className="bg-[#121215] border border-[#27272A] rounded-2xl p-6 sm:p-8 space-y-4 no-print" aria-label="Get the full report">
+            <h2 className="text-xl font-bold text-white">Your summary is ready</h2>
+            <p className="text-sm text-neutral-300 leading-relaxed">
+              The summary above gives you the main finding. Open the complete five-module report to see what customers may value, what to do next, how to measure progress and how RAGE can help.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                type="button"
+                onClick={() => setIsFullReportVisible(true)}
+                className="px-5 py-3 rounded-lg text-sm font-bold text-black bg-white hover:bg-neutral-200"
+              >
+                View the full report
+              </button>
+              {!isSampleReport && AGENCY_CONFIG.whatsappNumber && submission.contact.phone && (
+                <a
+                  href={`https://wa.me/${AGENCY_CONFIG.whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(`Please send my RAGE Oracle report for ${submission.business.brandName} to ${submission.contact.phone}.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 rounded-lg text-sm font-bold text-white bg-[#18181B] border border-[#27272A] hover:bg-[#27272A] text-center"
+                >
+                  Request it on WhatsApp
+                </a>
+              )}
+            </div>
+            {!isSampleReport && submission.contact.requestWhatsAppReport && (
+              <p className="text-xs text-neutral-400">
+                We’ve noted your WhatsApp delivery request and the number you provided. The RAGE Media Group team can follow up to arrange it.
+              </p>
+            )}
+          </section>
+        )}
+
+        {isFullReportVisible && (
+          <div className="space-y-12">
         {/* MODULE 2: CUSTOMER & MARKET REALITY */}
         <div className="print-module bg-[#121215] border border-[#27272A] rounded-2xl p-8 sm:p-10 space-y-6 shadow-xl">
           <div className="flex items-center justify-between border-b border-[#27272A] pb-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">MODULE 02 • CUSTOMER & MARKET REALITY</span>
-            <span className="text-xs text-neutral-400 font-semibold uppercase">MAIN SALES BLOCKER & UNTAPPED OPPORTUNITY</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">MODULE 2 • CUSTOMERS AND YOUR MARKET</span>
+            <span className="text-xs text-neutral-400 font-semibold uppercase">WHAT CUSTOMERS MAY NEED AND WHERE YOU CAN GROW</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -211,33 +220,33 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
             <div className="bg-[#18181B] border-2 border-white/80 p-6 rounded-xl space-y-3">
               <div className="flex items-center gap-2 text-white">
                 <AlertTriangle className="w-4 h-4 text-white" />
-                <span className="text-xs font-extrabold uppercase tracking-wider">MAIN THING HOLDING BACK SALES</span>
+                <span className="text-xs font-extrabold uppercase tracking-wider">WHAT MAY BE SLOWING GROWTH</span>
               </div>
-              <h3 className="text-lg font-extrabold text-white uppercase">{analysis.primaryConstraint.name}</h3>
+              <h3 className="text-lg font-extrabold text-white">{analysis.primaryConstraint.name}</h3>
               <p className="text-xs text-neutral-300 leading-relaxed font-medium">{analysis.primaryConstraint.description}</p>
               <div className="pt-2 border-t border-neutral-800 text-[11px] text-neutral-400 space-y-1">
-                <p><strong className="text-white">Why This Happens:</strong> {analysis.primaryConstraint.rootCause}</p>
-                <p><strong className="text-white">Cost To Your Business:</strong> {analysis.primaryConstraint.consequence}</p>
+                <p><strong className="text-white">Why this may be happening:</strong> {analysis.primaryConstraint.rootCause}</p>
+                <p><strong className="text-white">Possible effect on your business:</strong> {analysis.primaryConstraint.consequence}</p>
               </div>
             </div>
 
             {/* Perception Gap */}
             <div className="bg-[#18181B] p-6 rounded-xl border border-[#27272A] space-y-3 flex flex-col justify-between">
               <div>
-                <span className="text-xs font-extrabold text-neutral-400 uppercase tracking-wider block mb-2">WHAT YOU THINK YOU SELL vs WHAT BUYERS SEE</span>
+                <span className="text-xs font-extrabold text-neutral-400 uppercase tracking-wider block mb-2">HOW YOU WANT CUSTOMERS TO SEE YOU</span>
                 <div className="space-y-2 text-xs">
                   <div className="p-2.5 rounded bg-[#09090B] border border-neutral-800">
-                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">How You Want To Be Seen</span>
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">How you want to be seen</span>
                     <span className="font-semibold text-white">{analysis.perceptionGap.desired}</span>
                   </div>
                   <div className="p-2.5 rounded bg-[#09090B] border border-neutral-800">
-                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">How Buyers See You Today</span>
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold block">How customers may see you now</span>
                     <span className="font-semibold text-neutral-300">{analysis.perceptionGap.current}</span>
                   </div>
                 </div>
               </div>
               <p className="text-xs font-bold text-white pt-2 border-t border-neutral-800">
-                What This Costs You: {analysis.perceptionGap.commercialImpact}
+                <strong>Possible effect:</strong> {analysis.perceptionGap.commercialImpact}
               </p>
             </div>
           </div>
@@ -245,7 +254,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           {/* Whitespace & Customer Triggers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             <div className="bg-[#18181B] p-5 rounded-xl border border-[#27272A] space-y-2">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">UNTAPPED MARKET OPPORTUNITY</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">AN OPPORTUNITY TO EXPLORE</span>
               <ul className="space-y-1 text-xs text-neutral-300 font-medium">
                 {analysis.marketReality.whitespace.map((ws, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -257,7 +266,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
             </div>
 
             <div className="bg-[#18181B] p-5 rounded-xl border border-[#27272A] space-y-2">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">WHAT MAKES NIGERIAN BUYERS BUY</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">
+                What customers in {submission.business.market || 'your market'} may look for
+              </span>
               <ul className="space-y-1 text-xs text-neutral-300 font-medium">
                 {analysis.customerReality.decisionFactors.map((df, idx) => (
                   <li key={idx} className="flex items-start gap-2">
@@ -268,14 +279,21 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
               </ul>
             </div>
           </div>
+
+          {submission.customer.customerJourney && (
+            <div className="bg-[#18181B] p-5 rounded-xl border border-[#27272A] space-y-2">
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">THE CUSTOMER'S STEPS TO BUYING</span>
+              <p className="text-xs text-neutral-300 leading-relaxed">{submission.customer.customerJourney}</p>
+            </div>
+          )}
         </div>
 
         {/* MODULE 3: STRATEGIC NEXT BEST MOVE & PRACTICAL PLAN */}
         <div className="print-module bg-[#121215] border-2 border-white rounded-2xl p-8 sm:p-10 space-y-6 shadow-2xl relative">
           <div className="flex items-center justify-between border-b border-[#27272A] pb-4">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-white">MODULE 03 • YOUR SINGLE BEST NEXT MOVE</span>
+            <span className="text-xs font-extrabold uppercase tracking-widest text-white">MODULE 3 • WHAT TO DO NEXT</span>
             <span className="text-xs font-extrabold uppercase tracking-wider px-2.5 py-1 bg-white text-black rounded">
-              TOP PRIORITY FOR FAST RESULTS
+              YOUR FIRST PRIORITY
             </span>
           </div>
 
@@ -290,7 +308,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
 
           {/* Action Steps */}
           <div className="bg-[#09090B] p-5 rounded-xl border border-[#27272A] space-y-3">
-            <span className="text-xs font-extrabold text-white uppercase tracking-wider block">ACTION STEPS TO TAKE NOW</span>
+            <span className="text-xs font-extrabold text-white uppercase tracking-wider block">PRACTICAL STEPS TO TAKE</span>
             <ul className="space-y-2 text-xs text-neutral-300 font-medium">
               {analysis.nextBestMove.actions.map((act, idx) => (
                 <li key={idx} className="flex items-start gap-3">
@@ -306,7 +324,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           {/* Stop / Start Matrix & 30-Day Sprints */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
             <div className="bg-[#18181B] p-5 rounded-xl border border-[#27272A] space-y-3">
-              <span className="text-xs font-extrabold text-neutral-400 uppercase tracking-wider block">🛑 WHAT TO STOP DOING</span>
+              <span className="text-xs font-extrabold text-neutral-400 uppercase tracking-wider block">WHAT TO PAUSE</span>
               <ul className="space-y-1.5 text-xs text-neutral-300 font-medium">
                 {analysis.stop.map((item, idx) => (
                   <li key={idx}>• {item}</li>
@@ -315,7 +333,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
             </div>
 
             <div className="bg-[#18181B] p-5 rounded-xl border border-[#27272A] space-y-3">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">🚀 WHAT TO START DOING</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">WHAT TO START</span>
               <ul className="space-y-1.5 text-xs text-neutral-300 font-medium">
                 {analysis.start.map((item, idx) => (
                   <li key={idx}>• {item}</li>
@@ -326,7 +344,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
 
           {/* 30-Day Plan Overview */}
           <div className="space-y-3 pt-2">
-            <span className="text-xs font-extrabold text-white uppercase tracking-wider block">YOUR SIMPLE 30-DAY ACTION PLAN</span>
+            <span className="text-xs font-extrabold text-white uppercase tracking-wider block">YOUR 30-DAY PLAN</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
               {analysis.thirtyDayPlan.map((week, idx) => (
                 <div key={idx} className="bg-[#18181B] p-3.5 rounded-lg border border-[#27272A] space-y-1">
@@ -342,33 +360,39 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
         {/* MODULE 4: STRATEGIC BET & KEY NUMBERS */}
         <div className="print-module bg-[#121215] border border-[#27272A] rounded-2xl p-8 sm:p-10 space-y-6 shadow-xl">
           <div className="flex items-center justify-between border-b border-[#27272A] pb-4">
-            <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">MODULE 04 • YOUR GROWTH BET & KEY NUMBERS</span>
-            <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">HOW TO KNOW IT'S WORKING</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">MODULE 4 • TEST THE RECOMMENDATION</span>
+            <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider">HOW TO TRACK PROGRESS</span>
           </div>
 
           <div className="p-5 rounded-xl bg-[#09090B] border border-[#27272A] space-y-2">
-            <span className="text-[10px] font-extrabold text-neutral-400 uppercase tracking-widest block">OUR STRATEGIC PREDICTION</span>
-            <p className="text-xs font-medium italic text-neutral-200 leading-relaxed">
-              "We believe <strong className="text-white font-extrabold">{analysis.strategicBet.action}</strong> will drive <strong className="text-white font-extrabold">{analysis.strategicBet.desiredOutcome}</strong> among <strong className="text-white font-extrabold">{analysis.strategicBet.audience}</strong> because <span className="text-neutral-300">{(analysis.strategicBet.becauseEvidence || '').replace(/\.+$/, '')}</span>."
+            <span className="text-[10px] font-extrabold text-neutral-400 uppercase tracking-widest block">WHAT WE EXPECT TO HAPPEN</span>
+            <p className="text-sm font-semibold text-white leading-relaxed">{analysis.strategicBet.action}</p>
+            <p className="text-xs text-neutral-300 leading-relaxed">{analysis.strategicBet.desiredOutcome}</p>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              <strong className="text-neutral-200">Why this may work:</strong> {analysis.strategicBet.becauseEvidence}
+            </p>
+            <p className="text-xs text-neutral-400 leading-relaxed">
+              <strong className="text-neutral-200">Who this is for:</strong> {analysis.strategicBet.audience}
             </p>
           </div>
 
           {/* 4 Metric Cards without truncation */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">CONFIDENCE</span>
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">HOW SURE WE ARE</span>
               <p className="font-extrabold text-white text-xl">{analysis.strategicBet.confidence}%</p>
+              <p className="text-[10px] text-neutral-400">Based on the information available</p>
             </div>
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">EXPECTED IMPACT</span>
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">POSSIBLE RESULT</span>
               <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.expectedImpact}</p>
             </div>
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">RISK LEVEL</span>
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">WHAT TO WATCH OUT FOR</span>
               <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.risk}</p>
             </div>
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col justify-between space-y-2">
-              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">HOW TO TEST IT</span>
+              <span className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider block">HOW TO CHECK</span>
               <p className="font-bold text-white text-xs leading-normal">{analysis.strategicBet.validationMethod}</p>
             </div>
           </div>
@@ -376,11 +400,11 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           {/* Measurement Framework Metrics */}
           {analysis.measurementFramework && (
             <div className="pt-4 border-t border-[#27272A] space-y-4">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">KEY PERFORMANCE INDICATOR (KPI) DASHBOARD</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">NUMBERS TO WATCH</span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
                 {analysis.measurementFramework.businessKpis?.length > 0 && (
                   <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Business & Revenue KPIs</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Sales and business</span>
                     <ul className="space-y-1 text-neutral-300 text-xs font-medium">
                       {analysis.measurementFramework.businessKpis.map((kpi, i) => (
                         <li key={i}>• {kpi}</li>
@@ -390,7 +414,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
                 )}
                 {analysis.measurementFramework.marketingKpis?.length > 0 && (
                   <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Marketing & Acquisition KPIs</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Marketing</span>
                     <ul className="space-y-1 text-neutral-300 text-xs font-medium">
                       {analysis.measurementFramework.marketingKpis.map((kpi, i) => (
                         <li key={i}>• {kpi}</li>
@@ -400,7 +424,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
                 )}
                 {analysis.measurementFramework.brandKpis?.length > 0 && (
                   <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Brand Perception KPIs</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Brand awareness</span>
                     <ul className="space-y-1 text-neutral-300 text-xs font-medium">
                       {analysis.measurementFramework.brandKpis.map((kpi, i) => (
                         <li key={i}>• {kpi}</li>
@@ -410,7 +434,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
                 )}
                 {analysis.measurementFramework.leadingIndicators?.length > 0 && (
                   <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-2">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Leading Activity Signals</span>
+                    <span className="text-[10px] font-bold text-neutral-400 uppercase block tracking-wider">Early signs</span>
                     <ul className="space-y-1 text-neutral-300 text-xs font-medium">
                       {analysis.measurementFramework.leadingIndicators.map((kpi, i) => (
                         <li key={i}>• {kpi}</li>
@@ -425,7 +449,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
           {/* Strategic Unknowns */}
           {analysis.unknowns && analysis.unknowns.length > 0 && (
             <div className="pt-4 border-t border-[#27272A] space-y-3">
-              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">KEY STRATEGIC UNKNOWNS TO VALIDATE</span>
+              <span className="text-xs font-extrabold text-white uppercase tracking-wider block">QUESTIONS TO ANSWER</span>
               <div className="space-y-2">
                 {analysis.unknowns.map((un, idx) => (
                   <div key={idx} className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
@@ -447,49 +471,63 @@ export const ReportView: React.FC<ReportViewProps> = ({ submission, onBackToMain
         <div className="print-module bg-[#121215] border-2 border-white rounded-2xl p-8 sm:p-12 text-center space-y-8 shadow-2xl relative overflow-hidden">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#18181B] border border-[#27272A] text-xs font-extrabold text-white uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5 text-white" />
-            <span>WORK WITH {AGENCY_CONFIG.name.toUpperCase()}</span>
+            <span>MODULE 5 • HOW {AGENCY_CONFIG.name.toUpperCase()} CAN HELP</span>
           </div>
 
           <div className="space-y-4 max-w-2xl mx-auto">
             <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight leading-none">
-              TURN STRATEGY INTO REAL SALES & MARKET LEADERSHIP.
+              TURN THESE IDEAS INTO ACTION.
             </h2>
             <p className="text-sm text-neutral-300 leading-relaxed font-medium">
-              Good advice is only valuable when executed properly. At <strong>The RAGE Media Group</strong>, we build clear brand messaging, high-converting websites, video testimonial campaigns, and automated WhatsApp sales funnels for growing businesses in Nigeria, the UK, and Africa.
+              If you need support putting this plan into practice, our team can help you clarify your offer, reach the right people and make it easier for them to choose you.
             </p>
           </div>
 
           {/* Capabilities Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left max-w-3xl mx-auto pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left max-w-4xl mx-auto pt-2">
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
-              <span className="text-xs font-extrabold text-white uppercase block">01 • Clear Brand Positioning</span>
-              <p className="text-xs text-neutral-400">Simple messaging and high-trust visual branding that makes buyers choose you.</p>
+              <span className="text-xs font-extrabold text-white uppercase block">Brand strategy & identity</span>
+              <p className="text-xs text-neutral-400">Positioning, brand identity, messaging and communications that make your value easier to understand.</p>
             </div>
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
-              <span className="text-xs font-extrabold text-white uppercase block">02 • High-Converting Websites</span>
-              <p className="text-xs text-neutral-400">Fast, beautiful web & mobile pages built to turn visitors into WhatsApp leads.</p>
+              <span className="text-xs font-extrabold text-white uppercase block">Social media & digital growth</span>
+              <p className="text-xs text-neutral-400">Social media management, content, paid campaigns, search and performance marketing.</p>
             </div>
             <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
-              <span className="text-xs font-extrabold text-white uppercase block">03 • Growth & Video Proof Ads</span>
-              <p className="text-xs text-neutral-400">Video testimonial ads, press authority, and direct sales systems.</p>
+              <span className="text-xs font-extrabold text-white uppercase block">PR & public relations</span>
+              <p className="text-xs text-neutral-400">Media relations, reputation building, launches and campaigns that earn attention.</p>
+            </div>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
+              <span className="text-xs font-extrabold text-white uppercase block">Web, apps & eCommerce</span>
+              <p className="text-xs text-neutral-400">Websites, mobile experiences, online stores and customer journeys designed around your goals.</p>
+            </div>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
+              <span className="text-xs font-extrabold text-white uppercase block">Campaigns, video & advertising</span>
+              <p className="text-xs text-neutral-400">Creative campaigns, video, outdoor advertising and print to reach people across channels.</p>
+            </div>
+            <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
+              <span className="text-xs font-extrabold text-white uppercase block">WhatsApp & sales systems</span>
+              <p className="text-xs text-neutral-400">Lead capture, WhatsApp sales funnels and practical systems that help your team follow up.</p>
             </div>
           </div>
 
           <div className="pt-4 max-w-md mx-auto">
             <a
-              href={AGENCY_CONFIG.contactUrl}
+              href={AGENCY_CONFIG.bookingUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full px-8 py-4 rounded-xl font-black text-sm text-black bg-white hover:bg-neutral-200 shadow-2xl transition-all inline-flex items-center justify-center gap-2 uppercase tracking-wider border border-white"
             >
-              <span>BOOK A STRATEGY EXECUTION CALL</span>
+              <span>DISCUSS YOUR NEXT STEPS WITH US</span>
               <ArrowRight className="w-4 h-4" />
             </a>
             <p className="text-[11px] text-neutral-500 mt-3 font-semibold uppercase">
-              Direct access to senior strategists at The RAGE Media Group • theragemediagroup.com
+              Tell us you’d like to discuss your report and next steps.
             </p>
           </div>
         </div>
+          </div>
+        )}
 
       </div>
     </div>

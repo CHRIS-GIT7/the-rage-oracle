@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { AssessmentSubmission, AdminStats } from '../../src/types.js';
 import { SEEDED_ASSESSMENTS } from '../../src/data/seededAssessments.js';
+import { buildMonthlyVolume } from '../../src/lib/adminStats.js';
 
 const STORE_NAME = 'assessments';
 
@@ -65,7 +66,7 @@ export async function getAdminStats(): Promise<AdminStats> {
         )
       : 0;
 
-  const emailRate = total > 0 ? Math.round((emailSentCount / total) * 100) : 100;
+  const emailRate = total > 0 ? Math.round((emailSentCount / total) * 100) : 0;
 
   const constraintMap: Record<string, number> = {};
   const industryMap: Record<string, number> = {};
@@ -94,10 +95,6 @@ export async function getAdminStats(): Promise<AdminStats> {
     emailDeliveryRate: emailRate,
     topPrimaryConstraints,
     topIndustries,
-    monthlyVolume: [
-      { month: 'Jun', count: Math.max(1, Math.floor(total * 0.2)) },
-      { month: 'Jul', count: Math.max(2, Math.floor(total * 0.35)) },
-      { month: 'Aug', count: Math.max(3, Math.floor(total * 0.45)) },
-    ],
+    monthlyVolume: buildMonthlyVolume(list),
   };
 }

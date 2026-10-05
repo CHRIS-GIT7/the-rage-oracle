@@ -4,9 +4,9 @@ export const AGENCY_CONFIG = {
   website: "theragemediagroup.com",
   fullWebsiteUrl: "https://theragemediagroup.com",
   contactUrl: "https://theragemediagroup.com/contact",
+  bookingUrl: "https://theragemediagroup.com/contact",
+  whatsappNumber: "",
   emailFrom: "oracle@theragemediagroup.com",
-  adminEmail: "admin@theragemediagroup.com",
-  adminPassword: "oracle2026!",
   logoText: "THE RAGE MEDIA GROUP",
   accentColor: "#FFFFFF", // High-contrast White
   darkBg: "#0A0A0C", // Obsidian Black

@@ -1,11 +1,12 @@
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-
 export async function downloadReportAsPDF(
   reportElementId: string,
   fileName: string = 'The_RAGE_Oracle_Strategic_Report.pdf'
 ): Promise<boolean> {
   try {
+    const [{ jsPDF }, { default: html2canvas }] = await Promise.all([
+      import('jspdf'),
+      import('html2canvas'),
+    ]);
     const element = document.getElementById(reportElementId);
     if (!element) {
       console.error(`Report element #${reportElementId} not found.`);
@@ -44,6 +45,8 @@ export async function downloadReportAsPDF(
 
         const imgData = canvas.toDataURL('image/png');
         const moduleImgHeight = (canvas.height * printableWidth) / canvas.width;
+        const moduleBounds = mod.getBoundingClientRect();
+        const moduleScale = printableWidth / moduleBounds.width;
 
         // Check if adding this module exceeds printable height on current page
         if (!isFirstPage && (currentPageY + moduleImgHeight > pageHeight - marginBottom)) {
@@ -92,6 +95,19 @@ export async function downloadReportAsPDF(
             printableWidth,
             moduleImgHeight
           );
+          mod.querySelectorAll('a[href]').forEach(link => {
+            const href = (link as HTMLAnchorElement).href;
+            if (!/^https?:\/\//i.test(href)) return;
+
+            const bounds = link.getBoundingClientRect();
+            const linkX = marginX + (bounds.left - moduleBounds.left) * moduleScale;
+            const linkY = currentPageY + (bounds.top - moduleBounds.top) * moduleScale;
+            const linkWidth = bounds.width * moduleScale;
+            const linkHeight = bounds.height * moduleScale;
+            if (linkY + linkHeight <= pageHeight - marginBottom) {
+              pdf.link(linkX, linkY, linkWidth, linkHeight, { url: href });
+            }
+          });
           currentPageY += moduleImgHeight + 5; // 5mm spacing between modules on same page
         }
 

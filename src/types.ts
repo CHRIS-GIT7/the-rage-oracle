@@ -1,6 +1,7 @@
 export interface BusinessInfo {
   brandName: string;
   website: string;
+  socialLinks?: string[];
   industry: string;
   market: string;
   productDescription: string;
@@ -23,6 +24,7 @@ export interface BrandInfo {
 export interface CustomerMarketInfo {
   customerProblem: string;
   searchTrigger: string;
+  customerJourney?: string;
   hesitationReasons: string;
   topValueDrivers: string[];
   geographicMarkets: string;
@@ -36,6 +38,8 @@ export interface MarketingInfo {
   failedActivity: string;
   runningPaidAds: string;
   monthlyBudget: string;
+  monthlyBudgetCurrency?: string;
+  monthlyBudgetCurrencyOther?: string;
 }
 
 export interface StrategicQuestions {
@@ -53,6 +57,8 @@ export interface ContactInfo {
   companyName: string;
   phone?: string;
   allowFollowUp: boolean;
+  privacyConsent?: boolean;
+  requestWhatsAppReport?: boolean;
 }
 
 export interface AssessmentSubmission {
@@ -68,6 +74,7 @@ export interface AssessmentSubmission {
   reportUrl?: string;
   emailStatus: 'pending' | 'sent' | 'failed';
   emailSentAt?: string;
+  emailDeliveryMessage?: string;
   analysis?: OracleAnalysis;
   sources?: ResearchSource[];
 }

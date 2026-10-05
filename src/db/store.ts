@@ -1,5 +1,6 @@
 import { AssessmentSubmission, AdminStats } from '../types';
 import { SEEDED_ASSESSMENTS } from '../data/seededAssessments';
+import { buildMonthlyVolume } from '../lib/adminStats';
 
 // Global memory store for server and client session
 const STORAGE_KEY = 'brand_oracle_assessments_v1';
@@ -76,7 +77,7 @@ class AssessmentStore {
       ? Math.round(completed.reduce((acc, curr) => acc + (curr.analysis?.brandClarityIndex || 0), 0) / completed.length)
       : 0;
 
-    const emailRate = total > 0 ? Math.round((emailSentCount / total) * 100) : 100;
+    const emailRate = total > 0 ? Math.round((emailSentCount / total) * 100) : 0;
 
     // Constraints frequency
     const constraintMap: Record<string, number> = {};
@@ -107,11 +108,7 @@ class AssessmentStore {
       emailDeliveryRate: emailRate,
       topPrimaryConstraints,
       topIndustries,
-      monthlyVolume: [
-        { month: 'Jun', count: Math.max(1, Math.floor(total * 0.2)) },
-        { month: 'Jul', count: Math.max(2, Math.floor(total * 0.35)) },
-        { month: 'Aug', count: Math.max(3, Math.floor(total * 0.45)) },
-      ]
+      monthlyVolume: buildMonthlyVolume(list),
     };
   }
 }

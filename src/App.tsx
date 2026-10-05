@@ -9,20 +9,22 @@ import { ReportSkeletonLoader } from './components/ReportSkeletonLoader';
 import { AdminDashboard } from './components/AdminDashboard';
 import { AdminLogin } from './components/AdminLogin';
 import { AssessmentSubmission } from './types';
-import { SEEDED_ASSESSMENTS } from './data/seededAssessments';
-import { researchBrandWebsite } from './lib/research';
-import { analyzeBrandWithGemini } from './lib/gemini';
+import { SAMPLE_ASSESSMENTS } from './data/sampleAssessments';
 
 export function App() {
-  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'processing' | 'report' | 'admin' | 'admin_login'>('landing');
+  const [currentView, setCurrentView] = useState<'landing' | 'assessment' | 'processing' | 'report' | 'admin' | 'admin_login'>(() =>
+    window.location.pathname === '/admin' ? 'admin_login' : 'landing'
+  );
   const [activeSubmission, setActiveSubmission] = useState<AssessmentSubmission | null>(null);
   const [pendingBrandName, setPendingBrandName] = useState<string>('');
+  const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(false);
 
   // Start new assessment cleanly
   const handleStartAssessment = () => {
     setActiveSubmission(null);
     setPendingBrandName('');
+    setSubmissionError(null);
     try {
       localStorage.removeItem('brand_oracle_draft_v1');
     } catch {}
@@ -30,19 +32,10 @@ export function App() {
   };
 
   // Form submission handler
-  const handleFormSubmit = async (formData: Omit<AssessmentSubmission, 'id' | 'createdAt' | 'status' | 'emailStatus'>) => {
+  const handleFormSubmit = async (formData: Omit<AssessmentSubmission, 'id' | 'createdAt' | 'status' | 'emailStatus'>): Promise<boolean> => {
     setPendingBrandName(formData.business.brandName);
     setActiveSubmission(null); // Clear previous submission to ensure skeleton loader shows until ready
     setCurrentView('processing');
-
-    const id = 'ora-' + Date.now();
-    const newSubmission: AssessmentSubmission = {
-      ...formData,
-      id,
-      createdAt: new Date().toISOString(),
-      status: 'analyzing',
-      emailStatus: 'pending',
-    };
 
     try {
       const response = await fetch('/api/assessments', {
@@ -52,43 +45,26 @@ export function App() {
       });
 
       const data = await response.json();
+      if (!response.ok || !data.success || !data.assessment) {
+        throw new Error(data.error || 'We couldn’t prepare your report. Your answers are saved in this browser; please try again.');
+      }
       if (data.success && data.assessment) {
         setActiveSubmission(data.assessment);
-      } else {
-        throw new Error(data.error || 'Failed to analyze brand');
+        setCurrentView('report');
       }
-    } catch (err) {
-      console.warn('Backend API request fell back to client-side AI engine:', err);
-      try {
-        const researchSources = await researchBrandWebsite(
-          id,
-          formData.business.website,
-          formData.business.brandName,
-          formData.business.industry
-        );
-        const oracleAnalysis = await analyzeBrandWithGemini(newSubmission, researchSources);
-        const completedSubmission: AssessmentSubmission = {
-          ...newSubmission,
-          status: 'completed',
-          reportUrl: `/report/${id}`,
-          emailStatus: 'sent',
-          emailSentAt: new Date().toISOString(),
-          analysis: oracleAnalysis,
-          sources: researchSources,
-        };
-        setActiveSubmission(completedSubmission);
-      } catch (innerErr) {
-        console.error('Client-side analysis error:', innerErr);
-      }
+      setSubmissionError(null);
+      return true;
+    } catch (error) {
+      console.error('Assessment submission failed:', error);
+      setSubmissionError(error instanceof Error ? error.message : 'We couldn’t prepare your report. Please try again.');
+      setCurrentView('assessment');
+      return false;
     }
   };
 
-  const handleProcessingFinished = () => {
-    setCurrentView('report');
-  };
-
-  const handleOpenSampleReport = () => {
-    setActiveSubmission(SEEDED_ASSESSMENTS[0]);
+  const handleOpenSampleReport = (assessmentId = SAMPLE_ASSESSMENTS[0].id) => {
+    const sample = SAMPLE_ASSESSMENTS.find(item => item.id === assessmentId) || SAMPLE_ASSESSMENTS[0];
+    setActiveSubmission(sample);
     setCurrentView('report');
   };
 
@@ -107,9 +83,15 @@ export function App() {
     setCurrentView('admin');
   };
 
-  const handleLogoutAdmin = () => {
-    setIsAdminLoggedIn(false);
-    setCurrentView('landing');
+  const handleLogoutAdmin = async () => {
+    try {
+      const response = await fetch('/api/admin/logout', { method: 'POST' });
+      if (!response.ok) throw new Error('The admin session could not be cleared.');
+      setIsAdminLoggedIn(false);
+      setCurrentView('landing');
+    } catch (error) {
+      console.error('Admin logout failed:', error);
+    }
   };
 
   const handleViewReportFromAdmin = (submission: AssessmentSubmission) => {
@@ -139,14 +121,12 @@ export function App() {
           <AssessmentForm
             onSubmit={handleFormSubmit}
             onCancel={() => setCurrentView('landing')}
+            submissionError={submissionError}
           />
         )}
 
         {currentView === 'processing' && (
-          <ProcessingView
-            brandName={pendingBrandName}
-            onFinished={handleProcessingFinished}
-          />
+          <ProcessingView brandName={pendingBrandName} />
         )}
 
         {currentView === 'report' && (
@@ -180,4 +160,3 @@ export function App() {
 }
 
 export default App;
-

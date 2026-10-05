@@ -1,6 +1,6 @@
 import React from 'react';
 import { AGENCY_CONFIG } from '../data/agencyConfig';
-import { Sparkles, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { Logo } from './Logo';
 
 export const Footer: React.FC = () => {
@@ -17,8 +17,8 @@ export const Footer: React.FC = () => {
             <span className="status-pill active">ONLINE</span>
           </div>
           <p className="text-neutral-400 max-w-md text-xs leading-relaxed font-normal">
-            The RAGE Oracle™ is an AI-powered strategic brand assessment engine provided free of charge by{' '}
-            <strong className="text-white font-semibold">{AGENCY_CONFIG.name}</strong>. Designed to help founders, chief marketing officers, and business leaders identify growth constraints and reveal their single next best move.
+            A practical, AI-assisted assessment from{' '}
+            <strong className="text-white font-semibold">{AGENCY_CONFIG.name}</strong>. Get a clearer view of what is holding growth back and what to focus on next.
           </p>
           <a
             href={AGENCY_CONFIG.contactUrl}
@@ -37,22 +37,44 @@ export const Footer: React.FC = () => {
             Agency Capabilities
           </h4>
           <ul className="space-y-1.5 text-xs font-medium text-neutral-400">
-            <li><a href={AGENCY_CONFIG.contactUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Positioning & Strategy</a></li>
-            <li><a href={AGENCY_CONFIG.contactUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Campaign Architecture</a></li>
-            <li><a href={AGENCY_CONFIG.contactUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">Growth Marketing</a></li>
-            <li><a href={AGENCY_CONFIG.contactUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">eCommerce Funnels</a></li>
-            <li><a href={AGENCY_CONFIG.contactUrl} target="_blank" rel="noreferrer" className="hover:text-white transition-colors">AI Systems Integration</a></li>
+            {[
+              ['Brand strategy & positioning', `${AGENCY_CONFIG.fullWebsiteUrl}/project/creative-nexus/`],
+              ['Social media & growth marketing', `${AGENCY_CONFIG.fullWebsiteUrl}/project/creative-nexus/`],
+              ['PR, campaigns & launches', `${AGENCY_CONFIG.fullWebsiteUrl}/project/zent/`],
+              ['Websites & sales funnels', `${AGENCY_CONFIG.fullWebsiteUrl}/project/zent/`],
+              ['Branding & creative work', `${AGENCY_CONFIG.fullWebsiteUrl}/project/`],
+            ].map(([label, href]) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="hover:text-white transition-colors"
+                >
+                  Explore {label}
+                </a>
+              </li>
+            ))}
           </ul>
         </div>
 
-        {/* Legal & Guarantee */}
+        {/* Privacy */}
         <div>
           <h4 className="font-sans font-bold text-white text-xs uppercase tracking-wider mb-3">
-            Strategic Guarantee
+            Your information
           </h4>
           <p className="text-neutral-400 text-xs leading-relaxed mb-3 font-normal">
-            100% Free Confidential Assessment. No credit card required. Data is processed strictly for report synthesis.
+            We use your answers to prepare your assessment and deliver the report. Please don’t include passwords or sensitive personal information.
           </p>
+          <details id="privacy-notice" className="text-xs leading-relaxed">
+            <summary className="cursor-pointer text-white underline">Read the privacy notice</summary>
+            <div className="mt-2 space-y-2 text-neutral-400">
+              <p>We collect the business, brand, customer and marketing details you submit, the public website or social links you provide, and your name, email address and phone number. An unfinished form may be saved in this browser so you can continue later; it is removed when you submit or clear this browser’s site data.</p>
+              <p>We use submitted information to create and deliver your assessment. If you opt in to follow-up, RAGE Media Group may also contact you about your report. Public pages may be checked to add context. AI processing is provided by Google Gemini; report email delivery depends on our configured email provider.</p>
+              <p>Assessment details are stored so we can prepare and manage your report. You can request access, correction or deletion by emailing <a className="text-white underline" href={`mailto:${AGENCY_CONFIG.emailFrom}`}>{AGENCY_CONFIG.emailFrom}</a>. Do not submit confidential business information that you are not comfortable sharing for this purpose.</p>
+              <p>This notice describes the current assessment workflow and is not legal advice. The service operator should review the notice, retention period and vendor arrangements before launch.</p>
+            </div>
+          </details>
         </div>
       </div>
 

@@ -39,13 +39,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
         fetch('/api/admin/stats')
       ]);
 
+      if (!assRes.ok || !statsRes.ok) {
+        throw new Error(assRes.status === 401 || statsRes.status === 401
+          ? 'Your admin session has expired. Please sign in again.'
+          : 'Could not load admin data.');
+      }
       const assData = await assRes.json();
       const statsData = await statsRes.json();
 
-      if (assData.success) setAssessments(assData.assessments);
-      if (statsData.success) setStats(statsData.stats);
-    } catch (e) {
-      console.error('Error loading admin data:', e);
+      if (!assData.success || !statsData.success) {
+        throw new Error(assData.error || statsData.error || 'Could not load admin data.');
+      }
+      setAssessments(assData.assessments);
+      setStats(statsData.stats);
+    } catch (error) {
+      console.error('Error loading admin data:', error);
+      setActionFeedback(error instanceof Error ? error.message : 'Could not load admin data.');
     } finally {
       setLoading(false);
     }
@@ -60,12 +69,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
     try {
       const res = await fetch(`/api/assessments/${id}/email`, { method: 'POST' });
       const data = await res.json();
-      if (data.success) {
-        setActionFeedback(`Report email re-sent to ${email}`);
-        fetchAdminData();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || data.message || 'The report email could not be sent.');
       }
-    } catch (e) {
-      setActionFeedback(`Email dispatched to ${email}`);
+      setActionFeedback(`Report email sent to ${email}`);
+      fetchAdminData();
+    } catch (error) {
+      setActionFeedback(error instanceof Error ? error.message : 'The report email could not be sent.');
     }
   };
 
@@ -142,7 +152,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
             <div className="bg-[#121215] p-4 rounded-xl border border-[#27272A] border-l-2 border-l-neutral-300 space-y-1">
               <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-extrabold">COMPLETED_REPORTS</span>
               <div className="text-2xl font-black text-white">{stats.completedReports}</div>
-              <p className="text-[10px] text-neutral-500 font-medium">100% PDF reports dispatched</p>
+              <p className="text-[10px] text-neutral-500 font-medium">Assessments with a completed analysis</p>
             </div>
 
             <div className="bg-[#121215] p-4 rounded-xl border border-[#27272A] border-l-2 border-l-neutral-400 space-y-1">
@@ -154,7 +164,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
             <div className="bg-[#121215] p-4 rounded-xl border border-[#27272A] border-l-2 border-l-neutral-500 space-y-1">
               <span className="text-[10px] text-neutral-400 uppercase tracking-wider font-extrabold">EMAIL_DELIVERY_RATE</span>
               <div className="text-2xl font-black text-white">{stats.emailDeliveryRate}%</div>
-              <p className="text-[10px] text-neutral-500 font-medium">Dispatched attachments</p>
+              <p className="text-[10px] text-neutral-500 font-medium">Emails confirmed as sent</p>
             </div>
           </div>
         )}
@@ -202,6 +212,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
                     <td className="p-2.5">
                       <div className="text-neutral-200 font-medium">{item.contact.fullName}</div>
                       <div className="text-[10px] text-neutral-500">{item.contact.email}</div>
+                      <div className="text-[10px] text-neutral-500">
+                        {item.contact.phone || 'No phone number'}{item.contact.requestWhatsAppReport ? ' · WhatsApp requested' : ''}
+                      </div>
                     </td>
 
                     <td className="p-2.5 font-medium text-neutral-300">
@@ -228,8 +241,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
 
                     <td className="p-2.5">
                       <span className="px-2 py-0.5 rounded text-[10px] bg-white/10 text-white uppercase font-bold border border-white/20">
-                        COMPLETED
+                        {item.status}
                       </span>
+                      <div className="mt-1 text-[10px] font-semibold text-neutral-400">
+                        Email: {item.emailStatus}
+                      </div>
                     </td>
 
                     <td className="p-2.5 text-right space-x-1">
@@ -294,6 +310,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
                   <span className="text-neutral-400 uppercase text-[10px] font-extrabold">Contact Person</span>
                   <p className="font-extrabold text-white">{selectedSubmission.contact.fullName} ({selectedSubmission.contact.jobTitle || 'Executive'})</p>
                   <p className="text-neutral-300 font-medium">{selectedSubmission.contact.email}</p>
+                  <p className="text-neutral-300 font-medium">Phone: {selectedSubmission.contact.phone || 'Not provided'}</p>
+                  <p className="text-neutral-300 font-medium">
+                    Strategy follow-up requested: {selectedSubmission.contact.allowFollowUp ? 'Yes' : 'No'}
+                  </p>
+                  <p className="text-neutral-300 font-medium">
+                    WhatsApp report requested: {selectedSubmission.contact.requestWhatsAppReport ? 'Yes' : 'No'}
+                  </p>
                 </div>
 
                 <div className="bg-[#18181B] p-4 rounded-xl border border-[#27272A] space-y-1">
@@ -320,7 +343,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onViewReport }) 
                   }}
                   className="px-5 py-2.5 rounded-xl text-xs font-extrabold text-black bg-white hover:bg-neutral-200 uppercase tracking-wider transition-colors border border-white"
                 >
-                  Open Full 17-Page Report
+                  Open Full Report
                 </button>
               </div>
             </div>
