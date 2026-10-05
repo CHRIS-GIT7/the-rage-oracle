@@ -20,12 +20,3 @@
 - `RESEND_API_KEY` and `EMAIL_FROM`, or the SMTP settings listed above
 
 Make sure the sender domain is verified with the email provider. Netlify Blobs must be available to the deployed functions; verify a submission is stored and still present after a new deployment before accepting live leads. Configure provider-level rate limiting for `/api/admin/login` and `/api/assessments`: the application limits are best-effort per process/function instance and are not a substitute for an edge-level limit.
-
-## Required before public launch
-
-- Publish a reviewed privacy policy that identifies the data controller, purposes, legal basis, processors (including AI and email providers), retention/deletion period, contact for privacy requests, and applicable rights. The assessment's consent notice is not a substitute for that policy or legal review.
-- Confirm the live site URL, production email delivery, admin sign-in, persistent Blobs storage, report download, and the assessment workflow with test data. Remove test submissions afterward.
-- Replace `bookingUrl` in `src/data/agencyConfig.ts` with the actual scheduling page if prospects should book a time slot. Configure `whatsappNumber` there for the report's WhatsApp option; actual PDF delivery requires a WhatsApp Business messaging integration.
-- Set the Netlify site's production domain and verify HTTPS before launch. The configured security headers include HSTS and assume the site is served over HTTPS.
-
-Without an email provider, reports remain available on-screen and as downloads, but email delivery is reported as unavailable. The admin dashboard is not linked from the public site. Open `/admin` to sign in; it requires server-side credentials and uses an HTTP-only session cookie.
