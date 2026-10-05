@@ -872,7 +872,7 @@ export const AssessmentForm: React.FC<AssessmentFormProps> = ({ onSubmit, onCanc
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 uppercase tracking-wider mb-2">
-                  Phone Number <span className="text-white font-bold">*</span> 
+                  Phone Number <span className="text-white font-bold">*</span>
                 </label>
                 <input
                   type="tel"
